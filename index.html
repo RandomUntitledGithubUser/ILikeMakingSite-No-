@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>My SPA Auth</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <main class="container">
+        
+        <section id="view-login" class="spa-view">
+            <h1>Вход</h1>
+            <form id="loginForm" class="card">
+                <div class="form-row">
+                    <label for="login-email">Email или Username</label>
+                    <input id="login-email" type="text" required />
+                </div>
+                <div class="form-row">
+                    <label for="login-password">Пароль</label>
+                    <input id="login-password" type="password" required />
+                </div>
+                <div id="login-message" class="message"></div>
+                <button class="button" type="submit">Войти</button>
+            </form>
+            <p class="footer-links">Нет аккаунта? <a href="#" onclick="router.navigate('register')">Создать</a></p>
+        </section>
+
+        <section id="view-register" class="spa-view" style="display:none">
+            <h1>Регистрация</h1>
+            <form id="registerForm" class="card">
+                <div class="form-row">
+                    <label for="reg-name">Имя пользователя</label>
+                    <input id="reg-name" type="text" required />
+                </div>
+                <div class="form-row">
+                    <label for="reg-email">Email</label>
+                    <input id="reg-email" type="email" required />
+                </div>
+                <div class="form-row">
+                    <label for="reg-password">Пароль</label>
+                    <input id="reg-password" type="password" minlength="6" required />
+                </div>
+                <div id="register-message" class="message"></div>
+                <button class="button" type="submit">Зарегистрироваться</button>
+            </form>
+            <p class="footer-links">Уже есть аккаунт? <a href="#" onclick="router.navigate('login')">Войти</a></p>
+        </section>
+
+        <section id="view-profile" class="spa-view" style="display:none">
+            <h1>Профиль</h1>
+            <div id="profile-content" class="card">
+                <p>Загрузка данных...</p>
+            </div>
+            <button id="logoutBtn" class="button secondary">Выйти</button>
+        </section>
+
+    </main>
+
+    <script src="/auth.js"></script> 
+    <script src="/app.js"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 // auth-api.js
-const API_BASE = 'https://https://f58e47657e8ceffb-176-60-22-251.serveousercontent.com/api/auth';
+const API_BASE = 'https://7c60e707261363df-176-60-22-251.serveousercontent.com/api/auth';
 
 function createHeaders(token = null) {
   const headers = {

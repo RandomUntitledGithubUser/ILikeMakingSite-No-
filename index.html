@@ -3,34 +3,34 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>My SPA Auth</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <title>Placegolder</title>
+    <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
     <main class="container">
         
         <section id="view-login" class="spa-view">
-            <h1>Вход</h1>
+            <h1>Log in</h1>
             <form id="loginForm" class="card">
                 <div class="form-row">
-                    <label for="login-email">Email или Username</label>
+                    <label for="login-email">Email or Username</label>
                     <input id="login-email" type="text" required />
                 </div>
                 <div class="form-row">
-                    <label for="login-password">Пароль</label>
+                    <label for="login-password">Password</label>
                     <input id="login-password" type="password" required />
                 </div>
                 <div id="login-message" class="message"></div>
-                <button class="button" type="submit">Войти</button>
+                <button class="button" type="submit">Log in</button>
             </form>
-            <p class="footer-links">Нет аккаунта? <a href="#" onclick="router.navigate('register')">Создать</a></p>
+            <p class="footer-links">No account? <a href="#" onclick="router.navigate('register')">Создать</a></p>
         </section>
 
         <section id="view-register" class="spa-view" style="display:none">
-            <h1>Регистрация</h1>
+            <h1>Ragistration</h1>
             <form id="registerForm" class="card">
                 <div class="form-row">
-                    <label for="reg-name">Имя пользователя</label>
+                    <label for="reg-name">Username</label>
                     <input id="reg-name" type="text" required />
                 </div>
                 <div class="form-row">
@@ -38,26 +38,26 @@
                     <input id="reg-email" type="email" required />
                 </div>
                 <div class="form-row">
-                    <label for="reg-password">Пароль</label>
+                    <label for="reg-password">Password</label>
                     <input id="reg-password" type="password" minlength="6" required />
                 </div>
                 <div id="register-message" class="message"></div>
-                <button class="button" type="submit">Зарегистрироваться</button>
+                <button class="button" type="submit">Register</button>
             </form>
-            <p class="footer-links">Уже есть аккаунт? <a href="#" onclick="router.navigate('login')">Войти</a></p>
+            <p class="footer-links">Already have one? <a href="#" onclick="router.navigate('login')">Войти</a></p>
         </section>
 
         <section id="view-profile" class="spa-view" style="display:none">
-            <h1>Профиль</h1>
+            <h1>Profile</h1>
             <div id="profile-content" class="card">
-                <p>Загрузка данных...</p>
+                <p>Loading data...</p>
             </div>
-            <button id="logoutBtn" class="button secondary">Выйти</button>
+            <button id="logoutBtn" class="button secondary">log off</button>
         </section>
 
     </main>
 
-    <script src="/auth.js"></script> 
-    <script src="/app.js"></script>
+    <script src="./auth.js"></script> 
+    <script src="./app.js"></script>
 </body>
 </html>

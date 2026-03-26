@@ -1,6 +1,11 @@
 // auth-api.js
 const API_BASE = 'https://4d1551f4661654c7-176-60-22-251.serveousercontent.com/api/auth';
 
+const headers = {
+    'Content-Type': 'application/json',
+    'bypass-tunnel-reminder': 'true' // Для Localtunnel / Serveo, чтобы не было заглушек
+};
+
 async function registerUser({ name, email, password }) {
   const payload = { username: name, email: email, password: password };
   const res = await fetch(`${API_BASE}/register`, {

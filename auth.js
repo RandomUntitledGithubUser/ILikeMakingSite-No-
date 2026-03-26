@@ -1,16 +1,22 @@
 // auth-api.js
 const API_BASE = 'https://4d1551f4661654c7-176-60-22-251.serveousercontent.com/api/auth';
 
-const headers = {
+function createHeaders(token = null) {
+  const headers = {
     'Content-Type': 'application/json',
-    'bypass-tunnel-reminder': 'true' // Для Localtunnel / Serveo, чтобы не было заглушек
-};
+    'bypass-tunnel-reminder': 'true'
+  };
+  if (token) {
+    headers['Authorization'] = 'Bearer ' + token;
+  }
+  return headers;
+}
 
 async function registerUser({ name, email, password }) {
   const payload = { username: name, email: email, password: password };
   const res = await fetch(`${API_BASE}/register`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: createHeaders(),
     body: JSON.stringify(payload)
   });
   const data = await res.json();
@@ -23,7 +29,7 @@ async function loginUser({ email, password }) {
   // Запрос должен идти на /api/auth/login
   const res = await fetch(`${API_BASE}/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: createHeaders(),
     body: JSON.stringify(payload)
   });
   return await res.json();
@@ -32,7 +38,7 @@ async function loginUser({ email, password }) {
 async function fetchProfile(token) {
   const res = await fetch(`${API_BASE}/profile`, {
     method: 'GET',
-    headers: { 'Authorization': 'Bearer ' + token }
+    headers: createHeaders(token),
   });
 
   if (res.status === 200) {

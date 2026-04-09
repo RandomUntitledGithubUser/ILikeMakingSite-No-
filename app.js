@@ -1,82 +1,96 @@
 const router = {
-    navigate(view) {
-        // Скрываем все экраны
-        document.querySelectorAll('.spa-view').forEach(section => section.style.display = 'none');
-        
-        // Показываем нужный
-        const activeView = document.getElementById(`view-${view}`);
-        if (activeView) activeView.style.display = 'block';
+    async navigate(view) {
+        const token = localStorage.getItem('authToken');
+        const content = document.getElementById('app-content');
 
-        if (view === 'profile') loadProfileData();
+ 
+        if (token && (view === 'login' || view === 'register')) {
+            return this.navigate('profile'); 
+        }
+        if (!token && view === 'profile') {
+            return this.navigate('login'); 
+        }
+
+
+        if (view === 'profile') {
+            content.innerHTML = views.profile({ name: 'Загрузка...', email: '' });
+            const result = await fetchProfile(token);[cite: 3]
+            if (result.success) {
+                content.innerHTML = views.profile(result.user);
+                this.initLogout();
+            } else {
+                localStorage.removeItem('authToken');
+                this.navigate('login');
+            }
+        } else {
+            content.innerHTML = views[view] ? views[view]() : '404 Not Found';
+        }
+
+       
+        if (view === 'login') this.initLogin();
+        if (view === 'register') this.initRegister();
+
+        this.updateHeader();
+    },
+
+    updateHeader() {
+        const authZone = document.getElementById('auth-zone');
+        const token = localStorage.getItem('authToken');
+        
+        if (token) {
+            
+            authZone.innerHTML = `<button class="button secondary" onclick="router.navigate('profile')">Личный кабинет</button>`;
+        } else {
+            authZone.innerHTML = `<button class="button" onclick="router.navigate('login')">Войти</button>`;
+        }
+    },
+
+    initLogin() {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = await loginUser({ 
+                email: document.getElementById('login-email').value, 
+                password: document.getElementById('login-password').value 
+            });[cite: 3]
+            if (result.success) {
+                localStorage.setItem('authToken', result.token);
+                this.navigate('profile');
+            } else {
+                const msg = document.getElementById('login-message');
+                msg.textContent = result.message;
+                msg.className = 'message error';
+            }
+        });
+    },
+
+    initRegister() {
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = await registerUser({
+                name: document.getElementById('reg-name').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value
+            });[cite: 3]
+            if (result.success) {
+                localStorage.setItem('authToken', result.token);
+                this.navigate('profile');
+            }
+        });
+    },
+
+    initLogout() {
+        const btn = document.getElementById('logoutBtn');
+        if (btn) {
+            btn.onclick = () => {
+                localStorage.removeItem('authToken');
+                this.navigate('login');
+            };
+        }
     }
 };
 
-// --- ЛОГИКА ВХОДА ---
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const msg = document.getElementById('login-message');
 
-    const result = await loginUser({ email, password });
-    if (result.success) {
-        localStorage.setItem('authToken', result.token);
-        router.navigate('profile');
-    } else {
-        msg.textContent = result.message;
-        msg.className = 'message error';
-    }
-});
-
-// --- ЛОГИКА РЕГИСТРАЦИИ ---
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('reg-name').value;
-    const email = document.getElementById('reg-email').value;
-    const password = document.getElementById('reg-password').value;
-    const msg = document.getElementById('register-message');
-
-    const result = await registerUser({ name, email, password });
-    if (result.success) {
-        localStorage.setItem('authToken', result.token);
-        router.navigate('profile');
-    } else {
-        msg.textContent = result.message;
-        msg.className = 'message error';
-    }
-});
-
-// --- ЛОГИКА ПРОФИЛЯ ---
-async function loadProfileData() {
-    const token = localStorage.getItem('authToken');
-    const container = document.getElementById('profile-content');
-
-    if (!token) return router.navigate('login');
-
-    const result = await fetchProfile(token);
-    if (result.success) {
-        container.innerHTML = `
-            <p><strong>Имя:</strong> ${result.user.name}</p>
-            <p><strong>Email:</strong> ${result.user.email}</p>
-            <p><strong>Дата регистрации:</strong> ${new Date(result.user.registeredAt).toLocaleString()}</p>
-        `;
-    } else {
-        localStorage.removeItem('authToken');
-        router.navigate('login');
-    }
-}
-
-// Выход
-document.getElementById('logoutBtn').addEventListener('click', () => {
-    localStorage.removeItem('authToken');
-    router.navigate('login');
-});
-
-// При загрузке проверяем, залогинен ли юзер
 window.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('authToken')) {
-        router.navigate('profile');
-    } else {
-        router.navigate('login');
-    }
+    const startPage = localStorage.getItem('authToken') ? 'profile' : 'home';
+    router.navigate(startPage);
 });

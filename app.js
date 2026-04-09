@@ -1,13 +1,19 @@
 const router = {
-    async navigate(view) {
+    navigate(view) {
+        window.location.hash = view;
+    },
+
+    async render(view) {
         const token = localStorage.getItem('authToken');
         const content = document.getElementById('app-content');
 
         if (token && (view === 'login' || view === 'register')) {
-            return this.navigate('profile');
+            window.location.hash = 'profile';
+            return;
         }
         if (!token && view === 'profile') {
-            return this.navigate('login');
+            window.location.hash = 'login';
+            return;
         }
 
         if (view === 'profile') {
@@ -18,12 +24,12 @@ const router = {
                 this.initLogout();
             } else {
                 localStorage.removeItem('authToken');
-                this.navigate('login');
+                window.location.hash = 'login';
             }
         } else {
-            content.innerHTML = views[view] ? views[view]() : views.home();
+            content.innerHTML = typeof views[view] === 'function' ? views[view]() : views.home();
         }
-        
+
         if (view === 'login') this.initLogin();
         if (view === 'register') this.initRegister();
 
@@ -32,13 +38,11 @@ const router = {
 
     updateHeader() {
         const authZone = document.getElementById('auth-zone');
+        if (!authZone) return;
         const token = localStorage.getItem('authToken');
-        
-        if (token) {
-            authZone.innerHTML = `<button class="button secondary" onclick="router.navigate('profile')">Профиль</button>`;
-        } else {
-            authZone.innerHTML = `<button class="button" onclick="router.navigate('login')">Войти</button>`;
-        }
+        authZone.innerHTML = token 
+            ? `<button class="button secondary" onclick="router.navigate('profile')">Профиль</button>`
+            : `<button class="button" onclick="router.navigate('login')">Войти</button>`;
     },
 
     initLogin() {
@@ -90,6 +94,12 @@ const router = {
     }
 };
 
+window.addEventListener('hashchange', () => {
+    const view = window.location.hash.replace('#', '') || 'home';
+    router.render(view);
+});
+
 window.addEventListener('DOMContentLoaded', () => {
-    router.navigate('home');
+    const startView = window.location.hash.replace('#', '') || 'home';
+    router.render(startView);
 });

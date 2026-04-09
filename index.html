@@ -3,61 +3,36 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Placegolder</title>
+    <title>My Store</title>
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
-    <main class="container">
-        
-        <section id="view-login" class="spa-view">
-            <h1>Log in</h1>
-            <form id="loginForm" class="card">
-                <div class="form-row">
-                    <label for="login-email">Email or Username</label>
-                    <input id="login-email" type="text" required />
-                </div>
-                <div class="form-row">
-                    <label for="login-password">Password</label>
-                    <input id="login-password" type="password" required />
-                </div>
-                <div id="login-message" class="message"></div>
-                <button class="button" type="submit">Log in</button>
-            </form>
-            <p class="footer-links">No account? <a href="#" onclick="router.navigate('register')">Создать</a></p>
-        </section>
-
-        <section id="view-register" class="spa-view" style="display:none">
-            <h1>Ragistration</h1>
-            <form id="registerForm" class="card">
-                <div class="form-row">
-                    <label for="reg-name">Username</label>
-                    <input id="reg-name" type="text" required />
-                </div>
-                <div class="form-row">
-                    <label for="reg-email">Email</label>
-                    <input id="reg-email" type="email" required />
-                </div>
-                <div class="form-row">
-                    <label for="reg-password">Password</label>
-                    <input id="reg-password" type="password" minlength="6" required />
-                </div>
-                <div id="register-message" class="message"></div>
-                <button class="button" type="submit">Register</button>
-            </form>
-            <p class="footer-links">Already have one? <a href="#" onclick="router.navigate('login')">Войти</a></p>
-        </section>
-
-        <section id="view-profile" class="spa-view" style="display:none">
-            <h1>Profile</h1>
-            <div id="profile-content" class="card">
-                <p>Loading data...</p>
+    <header id="main-header">
+        <nav class="container nav-bar">
+            <div class="logo" onclick="router.navigate('home')">MY_LOGO</div>
+            <div class="nav-links">
+                <a href="#" onclick="router.navigate('catalog')">Каталог</a>
+                <a href="#" onclick="router.navigate('cart')">Корзина</a>
+                <a href="#" onclick="router.navigate('favorites')">Избранное</a>
             </div>
-            <button id="logoutBtn" class="button secondary">log off</button>
-        </section>
+            <div id="auth-zone">
+               
+            </div>
+        </nav>
+    </header>
 
+    <main id="app-content" class="container">
+        
     </main>
 
+    <footer class="main-footer">
+        <div class="container">
+            <p>Контакты: +7 (999) 000-00-00 | email: support@store.com</p>
+        </div>
+    </footer>
+
     <script src="./auth.js"></script> 
+    <script src="./views.js"></script>
     <script src="./app.js"></script>
 </body>
 </html>

@@ -10,10 +10,25 @@ const views = {
     login: () => `
         <h1>Вход</h1>
         <form id="loginForm" class="card">
-            <div class="form-row"><label>Email или Логин</label><input id="login-email" type="text" required /></div>
-            <div class="form-row"><label>Пароль</label><input id="login-password" type="password" required /></div>
+            <div class="form-row">
+                <label>Email или Логин</label>
+                <input id="login-email" type="text" placeholder="Введите ваш email" required />
+            </div>
+            <div class="form-row">
+                <label>Пароль</label>
+                <input id="login-password" type="password" placeholder="••••••••" required />
+            </div>
             <div id="login-message" class="message"></div>
+            
             <button class="button" type="submit">Войти</button>
+
+            <div class="form-footer" style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
+                <p>Ещё нет аккаунта? 
+                    <a href="#register" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                        Зарегистрироваться
+                    </a>
+                </p>
+            </div>
         </form>`,
 
     register: () => `
@@ -21,9 +36,18 @@ const views = {
         <form id="registerForm" class="card">
             <div class="form-row"><label>Имя</label><input id="reg-name" type="text" required /></div>
             <div class="form-row"><label>Email</label><input id="reg-email" type="email" required /></div>
-            <div class="form-row"><label>Пароль</label><input id="reg-password" type="password" minlength="6" required /></div>
+            <div class="form-row"><label>Пароль</label><input id="reg-password" type="password" required /></div>
             <div id="register-message" class="message"></div>
+            
             <button class="button" type="submit">Создать аккаунт</button>
+
+            <div class="form-footer" style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
+                <p>Уже есть профиль? 
+                    <a href="#login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                        Войти
+                    </a>
+                </p>
+            </div>
         </form>`,
 
     profile: (user) => `

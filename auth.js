@@ -21,6 +21,9 @@ async function registerUser({ name, email, password }) {
       headers: createHeaders(),
       body: JSON.stringify(payload)
     });
+    if (!res.ok) {
+      return { success: false, message: `Ошибка сервера: Статус ${res.status}` };
+    }
     return await res.json();
   } catch (error) {
     console.error("Fetch error:", error);
@@ -37,6 +40,9 @@ async function loginUser({ email, password }) {
       headers: createHeaders(),
       body: JSON.stringify(payload)
     });
+    if (!res.ok) {
+      return { success: false, message: `Ошибка сервера: Статус ${res.status}` };
+    }
     return await res.json();
   } catch (error) {
     console.error("Fetch error:", error);

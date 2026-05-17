@@ -504,11 +504,11 @@ function updateHeader() {
     const token = localStorage.getItem('authToken');
     if (token) {
         authZone.innerHTML = `
-            <a href="#" onclick="router.navigate('profile')" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
+            <a href="#profile" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
             <button class="button" onclick="initLogout()">Выйти</button>
         `;
     } else {
-        authZone.innerHTML = `<button class="button" onclick="router.navigate('login')">Войти</button>`;
+        authZone.innerHTML = `<a href="#login" class="button" style="text-decoration: none; display: inline-block; text-align: center;">Войти</a>`;
     }
 }
 

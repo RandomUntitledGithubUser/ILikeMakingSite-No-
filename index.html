@@ -10,11 +10,11 @@
 <body>
     <header id="main-header">
         <nav class="container nav-bar">
-            <div class="logo" onclick="router.navigate('home')">CardSlinger</div>
+            <div class="logo" onclick="window.location.hash = 'home'">CardSlinger</div>
             <div class="nav-links">
-                <a href="#" onclick="router.navigate('catalog')">Каталог</a>
-                <a href="#" onclick="router.navigate('cart')">Корзина</a>
-                <a href="#" onclick="router.navigate('favorites')">Избранное</a>
+                <a href="#catalogue">Каталог</a>
+                <a href="#cart">Корзина</a>
+                <a href="#favorites">Избранное</a>
             </div>
             <div id="auth-zone">
                <button class="button" onclick="router.navigate('login')">Войти</button>

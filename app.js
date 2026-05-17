@@ -332,6 +332,10 @@ async function loadAdminData() {
     if (currentAdminTab === 'items') {
         th.innerHTML = "<th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th>";
         const res = await fetch(`${API_BASE1}/admin/items`, { headers: getAuthHeaders() });
+        if (!res.ok) {
+                tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки товаров: ${res.status} (Доступ запрещен)</td></tr>`;
+                return;
+        }
         const items = await res.json();
         items.forEach(item => {
             tbody.insertAdjacentHTML('beforeend', `
@@ -350,6 +354,10 @@ async function loadAdminData() {
     } else {
         th.innerHTML = "<th>ID</th><th>Username</th><th>Email</th><th>Is Admin</th><th>Actions</th>";
         const res = await fetch(`${API_BASE1}/admin/users`, { headers: getAuthHeaders() });
+        if (!res.ok) {
+                tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки товаров: ${res.status} (Доступ запрещен)</td></tr>`;
+                return;
+        }
         const users = await res.json();
         users.forEach(u => {
             tbody.insertAdjacentHTML('beforeend', `

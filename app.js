@@ -192,13 +192,30 @@ async function fetchCataloguePage() {
     const indicator = document.getElementById("loadingIndicator");
     if (indicator) indicator.style.display = "block";
 
-    let url = `/api/items?page=${cataloguePage}&size=8&sortBy=${catalogueFilter.sortBy}&direction=${catalogueFilter.direction}&search=${encodeURIComponent(catalogueFilter.search)}`;
+
+    const itemsApiBase = API_BASE.replace('/auth', '/items');
+
+    let url = `${itemsApiBase}?page=${cataloguePage}&size=8&sortBy=${catalogueFilter.sortBy}&direction=${catalogueFilter.direction}&search=${encodeURIComponent(catalogueFilter.search)}`;
     if (catalogueFilter.category !== 'all') {
         url += `&category=${encodeURIComponent(catalogueFilter.category)}`;
     }
 
     try {
-        const res = await fetch(url);
+        const token = localStorage.getItem('authToken');
+
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'bypass-tunnel-reminder': 'true',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}) 
+            }
+        });
+
+        if (!res.ok) {
+            throw new Error(`Ошибка сервера: ${res.status}`);
+        }
+
         const data = await res.json();
         const grid = document.getElementById("catalogueGrid");
         
@@ -212,7 +229,7 @@ async function fetchCataloguePage() {
             catalogueHasMore = !data.last;
         }
     } catch (e) {
-        console.error(e);
+        console.error("Ошибка загрузки каталога:", e);
     } finally {
         if (indicator) indicator.style.display = "none";
         catalogueLoading = false;

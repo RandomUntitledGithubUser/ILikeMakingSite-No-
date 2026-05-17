@@ -64,7 +64,8 @@ async function fetchProfile(token) {
         user: {
           name: data.username,
           email: data.email,
-          registeredAt: data.createdAt
+          registeredAt: data.createdAt,
+          isAdmin: data.isAdmin
         }
       };
     } else {

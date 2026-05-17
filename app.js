@@ -6,19 +6,64 @@ let catalogueHasMore = true;
 let catalogueFilter = { search: '', category: 'all', sortBy: 'createdAt', direction: 'desc' };
 let carouselInterval = null;
 
+// Мост для совместимости регистра букв (views из views.js -> Views в app.js) и алиасов каталога
+if (typeof views !== 'undefined') {
+    window.Views = views;
+    if (!views.catalogue && views.catalog) {
+        views.catalogue = views.catalog;
+    }
+}
+
 // Auth Fetch Helpers
 function getAuthHeaders() {
-    const token = localStorage.getItem("token");
-    return token ? { "Authorization": "Bearer " + token, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+    // ИСПРАВЛЕНО: Ключ изменен с "token" на "authToken" для синхронизации со всем проектом
+    const token = localStorage.getItem("authToken");
+    return token ? { 
+        "Authorization": "Bearer " + token, 
+        "Content-Type": "application/json",
+        "bypass-tunnel-reminder": "true" 
+    } : { "Content-Type": "application/json" };
 }
 
 async function checkAuthStatus() {
     const token = localStorage.getItem('authToken');
-    if (!token) return false;
+    // ИСПРАВЛЕНО: Возвращаем объект со свойствами, так как метод route() проверяет .authenticated и .isAdmin
+    if (!token) return { authenticated: false, isAdmin: false };
 
-    const result = await fetchProfile(token); 
-    return result.success; 
+    try {
+        const result = await fetchProfile(token); 
+        if (result.success) {
+            return {
+                authenticated: true,
+                // Проверяем, является ли пользователь администратором
+                isAdmin: result.user && (result.user.isAdmin || result.user.name === 'admin')
+            };
+        }
+    } catch (e) {
+        console.error("Ошибка проверки сессии:", e);
+    }
+    return { authenticated: false, isAdmin: false };
 }
+
+// --- ОБЪЕКТ ROUTER ДЛЯ ПОЛНОЙ СОВМЕСТИМОСТИ С index.html ---
+// ИСПРАВЛЕНО: Создан объект router, который ловит вызовы из HTML и переводит их на новые URL-пути
+const router = {
+    async navigate(view) {
+        const mapping = {
+            'home': '/',
+            'catalog': '/catalogue',
+            'catalogue': '/catalogue',
+            'cart': '/cart',
+            'favorites': '/favorites',
+            'login': '/login',
+            'register': '/register',
+            'profile': '/profile',
+            'admin': '/admin'
+        };
+        const path = mapping[view] || '/';
+        await navigate(path);
+    }
+};
 
 // Router Setup
 async function navigate(path) {
@@ -32,7 +77,10 @@ async function route(path) {
     clearInterval(carouselInterval);
     window.onscroll = null; // Reset infinite scroll binding
     
-    const appContainer = document.getElementById("app");
+    // ИСПРАВЛЕНО: Заменено "app" на "app-content", чтобы соответствовать твоему index.html
+    const appContainer = document.getElementById("app-content");
+    if (!appContainer) return;
+
     const userStatus = await checkAuthStatus();
 
     // Guard Conditions
@@ -60,7 +108,8 @@ async function route(path) {
         appContainer.innerHTML = Views.catalogue();
         cataloguePage = 0;
         catalogueHasMore = true;
-        document.getElementById("catalogueGrid").innerHTML = "";
+        const grid = document.getElementById("catalogueGrid");
+        if (grid) grid.innerHTML = "";
         await fetchCataloguePage();
         setupInfiniteScroll();
     } 
@@ -92,10 +141,33 @@ async function route(path) {
         appContainer.innerHTML = Views.admin();
         await loadAdminData();
     }
+    // --- ИСПРАВЛЕНО: Добавлены недостающие маршруты для авторизации и личного кабинета ---
+    else if (path === "/login") {
+        appContainer.innerHTML = Views.login();
+        initLogin();
+    }
+    else if (path === "/register") {
+        appContainer.innerHTML = Views.register();
+        initRegister();
+    }
+    else if (path === "/profile") {
+        appContainer.innerHTML = Views.profile({ name: 'Загрузка...', email: '' });
+        const token = localStorage.getItem('authToken');
+        const result = await fetchProfile(token);
+        if (result.success) {
+            appContainer.innerHTML = Views.profile(result.user);
+        } else {
+            localStorage.removeItem('authToken');
+            return navigate('/login');
+        }
+    }
     // Fallback Legacy Mapping
     else if (typeof routes !== 'undefined' && routes[path]) {
         appContainer.innerHTML = routes[path]();
     }
+
+    // Автоматически обновляем шапку (Войти / Профиль / Выйти) при каждой смене страницы
+    updateHeader();
 }
 
 // --- Carousel Core Engine ---
@@ -117,7 +189,8 @@ function startCarouselLogic() {
 async function fetchCataloguePage() {
     if (catalogueLoading || !catalogueHasMore) return;
     catalogueLoading = true;
-    document.getElementById("loadingIndicator").style.display = "block";
+    const indicator = document.getElementById("loadingIndicator");
+    if (indicator) indicator.style.display = "block";
 
     let url = `/api/items?page=${cataloguePage}&size=8&sortBy=${catalogueFilter.sortBy}&direction=${catalogueFilter.direction}&search=${encodeURIComponent(catalogueFilter.search)}`;
     if (catalogueFilter.category !== 'all') {
@@ -133,7 +206,7 @@ async function fetchCataloguePage() {
             catalogueHasMore = false;
         } else {
             data.content.forEach(item => {
-                grid.insertAdjacentHTML('beforeend', Views.productCard(item));
+                if (grid) grid.insertAdjacentHTML('beforeend', Views.productCard(item));
             });
             cataloguePage++;
             catalogueHasMore = !data.last;
@@ -141,8 +214,8 @@ async function fetchCataloguePage() {
     } catch (e) {
         console.error(e);
     } finally {
+        if (indicator) indicator.style.display = "none";
         catalogueLoading = false;
-        document.getElementById("loadingIndicator").style.display = "none";
     }
 }
 
@@ -230,6 +303,7 @@ async function switchAdminTab(tab) {
 async function loadAdminData() {
     const th = document.getElementById("adminTh");
     const tbody = document.getElementById("adminTbody");
+    if (!th || !tbody) return;
     th.innerHTML = ""; tbody.innerHTML = "";
 
     if (currentAdminTab === 'items') {
@@ -244,7 +318,7 @@ async function loadAdminData() {
                     <td>${item.itemCategory}</td>
                     <td>${item.itemPrice}</td>
                     <td>
-                        <button onclick="openEditModal('items', ${item.id}, ${encodeURIComponent(JSON.stringify(item))})">Edit</button>
+                        <button onclick="openEditModal('items', ${item.id}, '${encodeURIComponent(JSON.stringify(item))}')">Edit</button>
                         <button class="btn-danger" onclick="adminDelete('items', ${item.id})">Delete</button>
                     </td>
                 </tr>
@@ -262,7 +336,7 @@ async function loadAdminData() {
                     <td>${u.email}</td>
                     <td>${u.admin ? 'Yes' : 'No'}</td>
                     <td>
-                        <button onclick="openEditModal('users', ${u.id}, ${encodeURIComponent(JSON.stringify(u))})">Edit</button>
+                        <button onclick="openEditModal('users', ${u.id}, '${encodeURIComponent(JSON.stringify(u))}')">Edit</button>
                         <button class="btn-danger" onclick="adminDelete('users', ${u.id})">Delete</button>
                     </td>
                 </tr>
@@ -363,6 +437,65 @@ async function saveAdminForm(e) {
         loadAdminData();
     } else {
         alert("Save transaction failed.");
+    }
+}
+
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ СТРАНИЦ АВТОРИЗАЦИИ (ИСПРАВЛЕНО: перенесены в глобальную область) ---
+function initLogin() {
+    const form = document.getElementById('loginForm');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await loginUser({
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-password').value
+        });
+        if (result.success) {
+            localStorage.setItem('authToken', result.token);
+            await navigate('/profile');
+        } else {
+            const msg = document.getElementById('login-message');
+            if (msg) {
+                msg.textContent = result.message;
+                msg.className = 'message error';
+            }
+        }
+    });
+}
+
+function initRegister() {
+    const form = document.getElementById('registerForm');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const result = await registerUser({
+            name: document.getElementById('reg-name').value,
+            email: document.getElementById('reg-email').value,
+            password: document.getElementById('reg-password').value
+        });
+        if (result.success) {
+            localStorage.setItem('authToken', result.token);
+            await navigate('/profile');
+        }
+    });
+}
+
+function initLogout() {
+    localStorage.removeItem('authToken');
+    navigate('/login');
+}
+
+function updateHeader() {
+    const authZone = document.getElementById('auth-zone');
+    if (!authZone) return;
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        authZone.innerHTML = `
+            <a href="#" onclick="router.navigate('profile')" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
+            <button class="button" onclick="initLogout()">Выйти</button>
+        `;
+    } else {
+        authZone.innerHTML = `<button class="button" onclick="router.navigate('login')">Войти</button>`;
     }
 }
 

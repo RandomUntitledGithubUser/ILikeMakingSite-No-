@@ -516,17 +516,26 @@ function initLogout() {
     navigate('login');
 }
 
-function updateHeader() {
+async function updateHeader() {
     const authZone = document.getElementById('auth-zone');
     if (!authZone) return;
+    
     const token = localStorage.getItem('authToken');
     if (token) {
+        const auth = await checkAuthStatus();
+        
+        let adminButton = '';
+        if (auth.isAdmin) {
+            adminButton = `<a href="#" onclick="router.navigate('admin')" style="margin-right: 15px; color: #e74c3c; text-decoration: none; font-weight: 600;">Админка</a>`;
+        }
+
         authZone.innerHTML = `
-            <a href="#profile" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
+            ${adminButton}
+            <a href="#" onclick="router.navigate('profile')" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
             <button class="button" onclick="initLogout()">Выйти</button>
         `;
     } else {
-        authZone.innerHTML = `<a href="#login" class="button" style="text-decoration: none; display: inline-block; text-align: center;">Войти</a>`;
+        authZone.innerHTML = `<button class="button" onclick="router.navigate('login')">Войти</button>`;
     }
 }
 

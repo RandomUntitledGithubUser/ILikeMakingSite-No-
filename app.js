@@ -13,12 +13,11 @@ function getAuthHeaders() {
 }
 
 async function checkAuthStatus() {
-    try {
-        const res = await fetch('/api/users/me', { headers: getAuthHeaders() });
-        return await res.json();
-    } catch (e) {
-        return { authenticated: false };
-    }
+    const token = localStorage.getItem('authToken');
+    if (!token) return false;
+
+    const result = await fetchProfile(token); 
+    return result.success; 
 }
 
 // Router Setup

@@ -123,13 +123,13 @@ async function route(view) {
     } 
     // Cart Route View
     else if (viewBase === "cart") {
-        const res = await fetch('${API_BASE}/cart', { headers: getAuthHeaders() });
+        const res = await fetch(`${API_BASE}/cart`, { headers: getAuthHeaders() });
         const items = await res.json();
         appContainer.innerHTML = Views.cart(items);
     } 
     // Favorites Route View
     else if (viewBase === "favorites") {
-        const res = await fetch('${API_BASE}/favorites', { headers: getAuthHeaders() });
+        const res = await fetch(`${API_BASE}/favorites`, { headers: getAuthHeaders() });
         const items = await res.json();
         appContainer.innerHTML = Views.favorites(items);
     } 

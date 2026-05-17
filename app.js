@@ -16,7 +16,6 @@ if (typeof views !== 'undefined') {
 
 // Auth Fetch Helpers
 function getAuthHeaders() {
-    // ИСПРАВЛЕНО: Ключ изменен с "token" на "authToken" для синхронизации со всем проектом
     const token = localStorage.getItem("authToken");
     return token ? { 
         "Authorization": "Bearer " + token, 
@@ -27,7 +26,6 @@ function getAuthHeaders() {
 
 async function checkAuthStatus() {
     const token = localStorage.getItem('authToken');
-    // ИСПРАВЛЕНО: Возвращаем объект со свойствами, так как метод route() проверяет .authenticated и .isAdmin
     if (!token) return { authenticated: false, isAdmin: false };
 
     try {
@@ -35,7 +33,6 @@ async function checkAuthStatus() {
         if (result.success) {
             return {
                 authenticated: true,
-                // Проверяем, является ли пользователь администратором
                 isAdmin: result.user && (result.user.isAdmin || result.user.name === 'admin')
             };
         }
@@ -45,55 +42,53 @@ async function checkAuthStatus() {
     return { authenticated: false, isAdmin: false };
 }
 
-// --- ОБЪЕКТ ROUTER ДЛЯ ПОЛНОЙ СОВМЕСТИМОСТИ С index.html ---
-// ИСПРАВЛЕНО: Создан объект router, который ловит вызовы из HTML и переводит их на новые URL-пути
+// --- ОБЪЕКТ ROUTER ДЛЯ СОВМЕСТИМОСТИ С index.html НА ХЭШАХ ---
 const router = {
-    async navigate(view) {
-        const mapping = {
-            'home': '/',
-            'catalog': '/catalogue',
-            'catalogue': '/catalogue',
-            'cart': '/cart',
-            'favorites': '/favorites',
-            'login': '/login',
-            'register': '/register',
-            'profile': '/profile',
-            'admin': '/admin'
-        };
-        const path = mapping[view] || '/';
-        await navigate(path);
+    navigate(view) {
+        // Устанавливаем хэш, что автоматически вызывает событие hashchange
+        window.location.hash = view;
     }
 };
 
-// Router Setup
-async function navigate(path) {
-    window.history.pushState({}, "", path);
-    await route(path);
+// Переход по путям через хэш
+async function navigate(hashPath) {
+    window.location.hash = hashPath;
 }
 
-window.onpopstate = () => route(window.location.pathname);
+// Слушатель изменения хэша в URL
+window.addEventListener('hashchange', () => {
+    const view = window.location.hash.replace('#', '') || 'home';
+    route(view);
+});
 
-async function route(path) {
+async function route(view) {
     clearInterval(carouselInterval);
-    window.onscroll = null; // Reset infinite scroll binding
+    window.onscroll = null; // Сброс бесконечного скролла
     
-    // ИСПРАВЛЕНО: Заменено "app" на "app-content", чтобы соответствовать твоему index.html
     const appContainer = document.getElementById("app-content");
     if (!appContainer) return;
 
     const userStatus = await checkAuthStatus();
 
-    // Guard Conditions
-    const protectedRoutes = ['/cart', '/favorites', '/admin', '/profile'];
-    if (protectedRoutes.some(r => path.startsWith(r)) && !userStatus.authenticated) {
-        return navigate('/login');
+    // Защита роутов (Guard Conditions)
+    const protectedViews = ['cart', 'favorites', 'admin', 'profile'];
+    if (protectedViews.includes(view) && !userStatus.authenticated) {
+        return navigate('login');
     }
-    if (path.startsWith('/admin') && !userStatus.isAdmin) {
-        return navigate('/');
+    if (view === 'admin' && !userStatus.isAdmin) {
+        return navigate('home');
     }
 
+    // Если авторизован, не пускаем на страницы логина/регистрации
+    if (userStatus.authenticated && (view === 'login' || view === 'register')) {
+        return navigate('profile');
+    }
+
+    // Очистка строки от динамических ID (например, "catalogue/12") для базового роутинга
+    const viewBase = view.split('/')[0];
+
     // Home Path Routing
-    if (path === "/" || path === "") {
+    if (viewBase === "home" || viewBase === "") {
         try {
             const res = await fetch('/api/items/recent');
             const recentItems = await res.json();
@@ -104,7 +99,7 @@ async function route(path) {
         }
     } 
     // Catalogue Path Routing
-    else if (path === "/catalogue") {
+    else if (viewBase === "catalog" || viewBase === "catalogue") {
         appContainer.innerHTML = Views.catalogue();
         cataloguePage = 0;
         catalogueHasMore = true;
@@ -113,9 +108,9 @@ async function route(path) {
         await fetchCataloguePage();
         setupInfiniteScroll();
     } 
-    // Item Details View Route
-    else if (path.startsWith("/catalogue/")) {
-        const id = path.split("/")[2];
+    // Item Details View Route (пример хэша: #catalogue/12)
+    else if (viewBase === "catalogue" && view.split("/")[1]) {
+        const id = view.split("/")[1];
         const res = await fetch(`/api/items/${id}`);
         if(res.ok) {
             const item = await res.json();
@@ -125,32 +120,32 @@ async function route(path) {
         }
     } 
     // Cart Route View
-    else if (path === "/cart") {
+    else if (viewBase === "cart") {
         const res = await fetch('/api/cart', { headers: getAuthHeaders() });
         const items = await res.json();
         appContainer.innerHTML = Views.cart(items);
     } 
     // Favorites Route View
-    else if (path === "/favorites") {
+    else if (viewBase === "favorites") {
         const res = await fetch('/api/favorites', { headers: getAuthHeaders() });
         const items = await res.json();
         appContainer.innerHTML = Views.favorites(items);
     } 
     // Admin Control Panel View
-    else if (path === "/admin") {
+    else if (viewBase === "admin") {
         appContainer.innerHTML = Views.admin();
         await loadAdminData();
     }
-    // --- ИСПРАВЛЕНО: Добавлены недостающие маршруты для авторизации и личного кабинета ---
-    else if (path === "/login") {
+    // Авторизация и ЛК
+    else if (viewBase === "login") {
         appContainer.innerHTML = Views.login();
         initLogin();
     }
-    else if (path === "/register") {
+    else if (viewBase === "register") {
         appContainer.innerHTML = Views.register();
         initRegister();
     }
-    else if (path === "/profile") {
+    else if (viewBase === "profile") {
         appContainer.innerHTML = Views.profile({ name: 'Загрузка...', email: '' });
         const token = localStorage.getItem('authToken');
         const result = await fetchProfile(token);
@@ -158,15 +153,15 @@ async function route(path) {
             appContainer.innerHTML = Views.profile(result.user);
         } else {
             localStorage.removeItem('authToken');
-            return navigate('/login');
+            return navigate('login');
         }
     }
     // Fallback Legacy Mapping
-    else if (typeof routes !== 'undefined' && routes[path]) {
-        appContainer.innerHTML = routes[path]();
+    else if (typeof routes !== 'undefined' && routes[viewBase]) {
+        appContainer.innerHTML = routes[viewBase]();
     }
 
-    // Автоматически обновляем шапку (Войти / Профиль / Выйти) при каждой смене страницы
+    // Автоматически обновляем шапку при каждой смене страницы
     updateHeader();
 }
 
@@ -191,7 +186,6 @@ async function fetchCataloguePage() {
     catalogueLoading = true;
     const indicator = document.getElementById("loadingIndicator");
     if (indicator) indicator.style.display = "block";
-
 
     const itemsApiBase = API_BASE.replace('/auth', '/items');
 
@@ -296,7 +290,7 @@ async function updateQty(rowId, newQty) {
         return;
     }
     const res = await fetch(`/api/cart/quantity/${rowId}?quantity=${newQty}`, { method: 'PUT', headers: getAuthHeaders() });
-    if(res.ok) route('/cart');
+    if(res.ok) route('cart');
 }
 
 async function removeFromCart(rowId) {
@@ -457,7 +451,7 @@ async function saveAdminForm(e) {
     }
 }
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ СТРАНИЦ АВТОРИЗАЦИИ (ИСПРАВЛЕНО: перенесены в глобальную область) ---
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ СТРАНИЦ АВТОРИЗАЦИИ ---
 function initLogin() {
     const form = document.getElementById('loginForm');
     if (!form) return;
@@ -469,7 +463,7 @@ function initLogin() {
         });
         if (result.success) {
             localStorage.setItem('authToken', result.token);
-            await navigate('/profile');
+            await navigate('profile');
         } else {
             const msg = document.getElementById('login-message');
             if (msg) {
@@ -492,14 +486,14 @@ function initRegister() {
         });
         if (result.success) {
             localStorage.setItem('authToken', result.token);
-            await navigate('/profile');
+            await navigate('profile');
         }
     });
 }
 
 function initLogout() {
     localStorage.removeItem('authToken');
-    navigate('/login');
+    navigate('login');
 }
 
 function updateHeader() {
@@ -516,7 +510,8 @@ function updateHeader() {
     }
 }
 
-// Global initialization override trigger
+// Первоначальный запуск роутинга при загрузке документа по текущему хэшу
 document.addEventListener("DOMContentLoaded", () => {
-    route(window.location.pathname);
+    const startView = window.location.hash.replace('#', '') || 'home';
+    route(startView);
 });

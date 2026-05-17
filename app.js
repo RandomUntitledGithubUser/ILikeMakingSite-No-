@@ -331,7 +331,7 @@ async function loadAdminData() {
 
     if (currentAdminTab === 'items') {
         th.innerHTML = "<th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th>";
-        const res = await fetch('${API_BASE1}/admin/items', { headers: getAuthHeaders() });
+        const res = await fetch(`${API_BASE1}/admin/items`, { headers: getAuthHeaders() });
         const items = await res.json();
         items.forEach(item => {
             tbody.insertAdjacentHTML('beforeend', `
@@ -349,7 +349,7 @@ async function loadAdminData() {
         });
     } else {
         th.innerHTML = "<th>ID</th><th>Username</th><th>Email</th><th>Is Admin</th><th>Actions</th>";
-        const res = await fetch('${API_BASE1}/admin/users', { headers: getAuthHeaders() });
+        const res = await fetch(`${API_BASE1}/admin/users`, { headers: getAuthHeaders() });
         const users = await res.json();
         users.forEach(u => {
             tbody.insertAdjacentHTML('beforeend', `
@@ -428,7 +428,7 @@ async function saveAdminForm(e) {
     e.preventDefault();
     const { type, id } = currentEditTarget;
     let body = {};
-    let url = `/api/admin/${type}`;
+    let url = `${API_BASE1}/admin/${type}`;
     let method = id ? 'PUT' : 'POST';
 
     if (id) url += `/${id}`;

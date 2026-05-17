@@ -4,7 +4,7 @@ const views = {
         return `
             <div class="carousel-container" id="homeCarousel">
                 ${recentItems.map((item, idx) => `
-                    <div class="carousel-slide ${idx === 0 ? 'active' : ''}" onclick="navigate('/catalogue/${item.id}')">
+                    <div class="carousel-slide ${idx === 0 ? 'active' : ''}" onclick="window.location.hash = 'catalogue/${item.id}'">
                         <img src="${item.itemImageUrl || 'https://via.placeholder.com/150'}" class="carousel-img" />
                         <div class="carousel-info">
                             <h2>${item.itemName}</h2>
@@ -22,7 +22,7 @@ const views = {
             ${carouselHTML}
             <h1>Welcome to TCG Cards Store</h1>
             <p>Find boosters, bundles, rare cards and custom merch here!</p>
-            <button class="btn" onclick="navigate('/catalogue')">View Catalogue</button>
+            <a href="#catalogue" class="btn" style="text-decoration: none; display: inline-block;">View Catalogue</a>
         </div>
     `,
 
@@ -59,7 +59,7 @@ const views = {
     `,
 
     productCard: (item) => `
-        <div class="product-card" onclick="event.stopPropagation(); navigate('/catalogue/${item.id}')">
+        <div class="product-card" onclick="event.stopPropagation(); window.location.hash = 'catalogue/${item.id}'">
             <img src="${item.itemImageUrl || 'https://via.placeholder.com/150'}" />
             <h4>${item.itemName}</h4>
             <p>${item.itemPrice} USD</p>
@@ -81,7 +81,7 @@ const views = {
                 <button class="btn" onclick="addToCart(${item.id})">Add to Cart</button>
                 <button class="btn" onclick="toggleFav(${item.id})" style="background:#dc3545;">Add to Favorites</button>
                 <br/><br/>
-                <button class="btn-link" onclick="navigate('/catalogue')">← Back to Catalogue</button>
+                <a href="#catalogue" class="btn-link" style="text-decoration: none; display: inline-block;">← Back to Catalogue</a>
             </div>
         </div>
     `,
@@ -156,8 +156,6 @@ const views = {
         </table>
     `,
 
-
-    //^^^^^^^^^^^^NEW STUFF^^^^^^^^^^^^*/
     login: () => `
         <h1>Вход</h1>
         <form id="loginForm" class="card">
@@ -208,7 +206,4 @@ const views = {
             <p><strong>Email:</strong> ${user.email}</p>
         </div>
         <button id="logoutBtn" class="button secondary">Выйти</button>`
-
-
-    
 };

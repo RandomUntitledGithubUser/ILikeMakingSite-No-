@@ -35,7 +35,7 @@ async function checkAuthStatus() {
         if (result.success) {
             return {
                 authenticated: true,
-                isAdmin: result.user.isAdmin === ture || 
+                isAdmin: result.user.isAdmin === true || 
                          result.user.name === 'admin'
             };
         }

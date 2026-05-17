@@ -35,7 +35,8 @@ async function checkAuthStatus() {
         if (result.success) {
             return {
                 authenticated: true,
-                isAdmin: result.user && (result.user.isAdmin || result.user.name === 'admin')
+                isAdmin: result.user.isAdmin === ture || 
+                         result.user.name === 'admin'
             };
         }
     } catch (e) {
@@ -526,7 +527,7 @@ async function updateHeader() {
         
         let adminButton = '';
         if (auth.isAdmin) {
-            adminButton = `<a href="#" onclick="router.navigate('admin')" style="margin-right: 15px; color: #e74c3c; text-decoration: none; font-weight: 600;">Админка</a>`;
+            adminButton = `<a href="#admin" style="margin-right: 15px; color: #e74c3c; text-decoration: none; font-weight: 600;">Админка</a>`;
         }
 
         authZone.innerHTML = `

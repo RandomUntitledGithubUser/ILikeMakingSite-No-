@@ -1,4 +1,4 @@
-const API_BASE = 'https://87ccf236caac8720-176-60-55-198.serveousercontent.com/api';
+
 
 // Application Logic Engine
 let currentAdminTab = 'items';

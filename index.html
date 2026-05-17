@@ -9,7 +9,7 @@
 <body>
     <header id="main-header">
         <nav class="container nav-bar">
-            <div class="logo" onclick="router.navigate('home')">MY_LOGO</div>
+            <div class="logo" onclick="router.navigate('home')">CardSlinger</div>
             <div class="nav-links">
                 <a href="#" onclick="router.navigate('catalog')">Каталог</a>
                 <a href="#" onclick="router.navigate('cart')">Корзина</a>
@@ -34,5 +34,18 @@
     <script src="./auth.js"></script> 
     <script src="./views.js"></script>
     <script src="./app.js"></script>
+
+
+    <div id="adminModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeAdminModal()">&times;</span>
+    <h3 id="modalTitle">Edit</h3>
+    <form id="modalForm" onsubmit="saveAdminForm(event)">
+      <div id="modalFields"></div>
+      <button type="submit" class="btn">Save</button>
+    </form>
+  </div>
+</div>
+    
 </body>
 </html>

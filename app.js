@@ -113,7 +113,7 @@ async function route(view) {
     // Item Details View Route (пример хэша: #catalogue/12)
     else if (viewBase === "catalogue" && view.split("/")[1]) {
         const id = view.split("/")[1];
-        const res = await fetch(`/api/items/${id}`);
+        const res = await fetch(`${API_BASE}/items/${id}`);
         if(res.ok) {
             const item = await res.json();
             appContainer.innerHTML = Views.itemDetail(item);

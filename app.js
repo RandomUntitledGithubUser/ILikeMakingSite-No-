@@ -1,4 +1,4 @@
-
+const API_BASE1 = 'https://431499eee1555ba1-176-60-55-198.serveousercontent.com/api';
 
 // Application Logic Engine
 let currentAdminTab = 'items';
@@ -44,7 +44,7 @@ async function checkAuthStatus() {
     return { authenticated: false, isAdmin: false };
 }
 
-// --- ОБЪЕКТ ROUTER ДЛЯ СОВМЕСТИМОСТИ С index.html НА ХЭШАХ ---
+
 const router = {
     navigate(view) {
         // Устанавливаем хэш, что автоматически вызывает событие hashchange
@@ -92,7 +92,7 @@ async function route(view) {
     // Home Path Routing
     if (viewBase === "home" || viewBase === "") {
         try {
-            const res = await fetch('${API_BASE}/items/recent');
+            const res = await fetch(`${API_BASE1}/items/recent`);
             const recentItems = await res.json();
             appContainer.innerHTML = Views.home(Views.carouselBlock(recentItems));
             startCarouselLogic();
@@ -113,7 +113,7 @@ async function route(view) {
     // Item Details View Route (пример хэша: #catalogue/12)
     else if (viewBase === "catalogue" && view.split("/")[1]) {
         const id = view.split("/")[1];
-        const res = await fetch(`${API_BASE}/items/${id}`);
+        const res = await fetch(`${API_BASE1}/items/${id}`);
         if(res.ok) {
             const item = await res.json();
             appContainer.innerHTML = Views.itemDetail(item);
@@ -123,13 +123,23 @@ async function route(view) {
     } 
     // Cart Route View
     else if (viewBase === "cart") {
-        const res = await fetch(`${API_BASE}/cart`, { headers: getAuthHeaders() });
+        const res = await fetch(`${API_BASE1}/cart`, { headers: getAuthHeaders() });
+        if (!res.ok) {
+        console.error("Ошибка загрузки корзины:", res.status);
+        document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить корзину.</p>`;
+        return;
+        }
         const items = await res.json();
         appContainer.innerHTML = Views.cart(items);
     } 
     // Favorites Route View
     else if (viewBase === "favorites") {
-        const res = await fetch(`${API_BASE}/favorites`, { headers: getAuthHeaders() });
+        const res = await fetch(`${API_BASE1}/favorites`, { headers: getAuthHeaders() });
+        if (!res.ok) {
+        console.error("Ошибка загрузки избранного:", res.status);
+        document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить избранное.</p>`;
+        return;
+        }
         const items = await res.json();
         appContainer.innerHTML = Views.favorites(items);
     } 

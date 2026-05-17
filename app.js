@@ -1,4 +1,4 @@
-const API_BASE1 = 'https://431499eee1555ba1-176-60-55-198.serveousercontent.com/api';
+const API_BASE1 = 'https://5e8411a0ea384f9f-176-60-55-198.serveousercontent.com/api';
 
 // Application Logic Engine
 let currentAdminTab = 'items';
@@ -86,8 +86,10 @@ async function route(view) {
         return navigate('profile');
     }
 
-    // Очистка строки от динамических ID (например, "catalogue/12") для базового роутинга
-    const viewBase = view.split('/')[0];
+    // Разделяем хэш для проверки наличия динамических ID (например, "catalogue/12")
+    const viewParts = view.split('/');
+    const viewBase = viewParts[0];
+    const dynamicId = viewParts[1];
 
     // Home Path Routing
     if (viewBase === "home" || viewBase === "") {
@@ -100,7 +102,17 @@ async function route(view) {
             appContainer.innerHTML = Views.home('');
         }
     } 
-    // Catalogue Path Routing
+    // Item Details View Route (пример хэша: #catalogue/12) - ПЕРЕНЕСЕНО НАВЕРХ И ИСПРАВЛЕНО
+    else if ((viewBase === "catalog" || viewBase === "catalogue") && dynamicId) {
+        const res = await fetch(`${API_BASE1}/items/${dynamicId}`);
+        if(res.ok) {
+            const item = await res.json();
+            appContainer.innerHTML = Views.itemDetail(item);
+        } else {
+            appContainer.innerHTML = "<h3>Product not found</h3>";
+        }
+    } 
+    // Catalogue Path Routing (обычный каталог без конкретного ID)
     else if (viewBase === "catalog" || viewBase === "catalogue") {
         appContainer.innerHTML = Views.catalogue();
         cataloguePage = 0;
@@ -110,24 +122,13 @@ async function route(view) {
         await fetchCataloguePage();
         setupInfiniteScroll();
     } 
-    // Item Details View Route (пример хэша: #catalogue/12)
-    else if (viewBase === "catalogue" && view.split("/")[1]) {
-        const id = view.split("/")[1];
-        const res = await fetch(`${API_BASE1}/items/${id}`);
-        if(res.ok) {
-            const item = await res.json();
-            appContainer.innerHTML = Views.itemDetail(item);
-        } else {
-            appContainer.innerHTML = "<h3>Product not found</h3>";
-        }
-    } 
     // Cart Route View
     else if (viewBase === "cart") {
         const res = await fetch(`${API_BASE1}/cart`, { headers: getAuthHeaders() });
         if (!res.ok) {
-        console.error("Ошибка загрузки корзины:", res.status);
-        document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить корзину.</p>`;
-        return;
+            console.error("Ошибка загрузки корзины:", res.status);
+            document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить корзину.</p>`;
+            return;
         }
         const items = await res.json();
         appContainer.innerHTML = Views.cart(items);
@@ -136,9 +137,9 @@ async function route(view) {
     else if (viewBase === "favorites") {
         const res = await fetch(`${API_BASE1}/favorites`, { headers: getAuthHeaders() });
         if (!res.ok) {
-        console.error("Ошибка загрузки избранного:", res.status);
-        document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить избранное.</p>`;
-        return;
+            console.error("Ошибка загрузки избранного:", res.status);
+            document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить избранное.</p>`;
+            return;
         }
         const items = await res.json();
         appContainer.innerHTML = Views.favorites(items);
@@ -199,9 +200,8 @@ async function fetchCataloguePage() {
     const indicator = document.getElementById("loadingIndicator");
     if (indicator) indicator.style.display = "block";
 
-    const itemsApiBase = API_BASE.replace('/auth', '/items');
-
-    let url = `${itemsApiBase}?page=${cataloguePage}&size=8&sortBy=${catalogueFilter.sortBy}&direction=${catalogueFilter.direction}&search=${encodeURIComponent(catalogueFilter.search)}`;
+    // ИСПРАВЛЕНО: Теперь используется базовая константа API_BASE1
+    let url = `${API_BASE1}/items?page=${cataloguePage}&size=8&sortBy=${catalogueFilter.sortBy}&direction=${catalogueFilter.direction}&search=${encodeURIComponent(catalogueFilter.search)}`;
     if (catalogueFilter.category !== 'all') {
         url += `&category=${encodeURIComponent(catalogueFilter.category)}`;
     }

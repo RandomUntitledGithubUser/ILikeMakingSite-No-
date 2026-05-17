@@ -1,3 +1,5 @@
+const API_BASE = 'https://87ccf236caac8720-176-60-55-198.serveousercontent.com/api';
+
 // Application Logic Engine
 let currentAdminTab = 'items';
 let cataloguePage = 0;
@@ -90,7 +92,7 @@ async function route(view) {
     // Home Path Routing
     if (viewBase === "home" || viewBase === "") {
         try {
-            const res = await fetch('/api/items/recent');
+            const res = await fetch('${API_BASE}/items/recent');
             const recentItems = await res.json();
             appContainer.innerHTML = Views.home(Views.carouselBlock(recentItems));
             startCarouselLogic();
@@ -121,13 +123,13 @@ async function route(view) {
     } 
     // Cart Route View
     else if (viewBase === "cart") {
-        const res = await fetch('/api/cart', { headers: getAuthHeaders() });
+        const res = await fetch('${API_BASE}/cart', { headers: getAuthHeaders() });
         const items = await res.json();
         appContainer.innerHTML = Views.cart(items);
     } 
     // Favorites Route View
     else if (viewBase === "favorites") {
-        const res = await fetch('/api/favorites', { headers: getAuthHeaders() });
+        const res = await fetch('${API_BASE}/favorites', { headers: getAuthHeaders() });
         const items = await res.json();
         appContainer.innerHTML = Views.favorites(items);
     } 

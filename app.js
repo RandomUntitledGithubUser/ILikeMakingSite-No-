@@ -281,13 +281,13 @@ function resetAndReloadCatalogue() {
 
 // --- Purchase Flow Actions ---
 async function addToCart(itemId) {
-    const res = await fetch(`/api/cart/add/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
+    const res = await fetch(`${API_BASE1}/cart/add/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
     if(res.ok) alert("Item added to cart!");
     else alert("Please login first.");
 }
 
 async function toggleFav(itemId) {
-    const res = await fetch(`/api/favorites/toggle/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
+    const res = await fetch(`${API_BASE1}/favorites/toggle/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
     if(res.ok) {
         const data = await res.json();
         alert(data.added ? "Added to favorites!" : "Removed from favorites!");
@@ -301,17 +301,17 @@ async function updateQty(rowId, newQty) {
         await removeFromCart(rowId);
         return;
     }
-    const res = await fetch(`/api/cart/quantity/${rowId}?quantity=${newQty}`, { method: 'PUT', headers: getAuthHeaders() });
+    const res = await fetch(`${API_BASE1}/cart/quantity/${rowId}?quantity=${newQty}`, { method: 'PUT', headers: getAuthHeaders() });
     if(res.ok) route('cart');
 }
 
 async function removeFromCart(rowId) {
-    const res = await fetch(`/api/cart/remove/${rowId}`, { method: 'DELETE', headers: getAuthHeaders() });
+    const res = await fetch(`${API_BASE1}/cart/remove/${rowId}`, { method: 'DELETE', headers: getAuthHeaders() });
     if(res.ok) document.getElementById(`cart-row-${rowId}`)?.remove();
 }
 
 async function removeFav(itemId, rowId) {
-    const res = await fetch(`/api/favorites/toggle/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
+    const res = await fetch(`${API_BASE1}/favorites/toggle/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
     if(res.ok) document.getElementById(`fav-row-${rowId}`)?.remove();
 }
 
@@ -331,7 +331,7 @@ async function loadAdminData() {
 
     if (currentAdminTab === 'items') {
         th.innerHTML = "<th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th>";
-        const res = await fetch('/api/admin/items', { headers: getAuthHeaders() });
+        const res = await fetch('${API_BASE1}/admin/items', { headers: getAuthHeaders() });
         const items = await res.json();
         items.forEach(item => {
             tbody.insertAdjacentHTML('beforeend', `
@@ -349,7 +349,7 @@ async function loadAdminData() {
         });
     } else {
         th.innerHTML = "<th>ID</th><th>Username</th><th>Email</th><th>Is Admin</th><th>Actions</th>";
-        const res = await fetch('/api/admin/users', { headers: getAuthHeaders() });
+        const res = await fetch('${API_BASE1}/admin/users', { headers: getAuthHeaders() });
         const users = await res.json();
         users.forEach(u => {
             tbody.insertAdjacentHTML('beforeend', `
@@ -370,7 +370,7 @@ async function loadAdminData() {
 
 async function adminDelete(type, id) {
     if (confirm("Вы уверены, что хотите это сделать?")) {
-        const res = await fetch(`/api/admin/${type}/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+        const res = await fetch(`${API_BASE1}/admin/${type}/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
         if (res.ok) loadAdminData();
     }
 }

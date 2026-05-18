@@ -165,7 +165,7 @@ const views = {
             </div>
             <div class="form-row">
                 <label>Пароль</label>
-                <input id="login-password" type="password" placeholder="••••••••" minlength="8" required />
+                <input id="login-password" type="password" placeholder="••••••••" minlength="6" required />
             </div>
             <div id="login-message" class="message"></div>
             

@@ -459,11 +459,11 @@ function initLogin() {
         const password = document.getElementById('login-password').value;
         const msg = document.getElementById('login-message');
         
-        if (!emailOrUsername || !password) {
+        /*if (!emailOrUsername || !password) {
             msg.textContent = "Заполните все поля!";
             msg.className = 'message error';
             return;
-        }
+        }*/
 
         const result = await loginUser({ username: emailOrUsername, password });
         if (result.success) {

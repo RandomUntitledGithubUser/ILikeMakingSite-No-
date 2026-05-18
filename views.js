@@ -193,7 +193,7 @@ const views = {
         <h1>Профиль</h1>
         <div class="card">
             <p><strong>Имя:</strong> ${user.username}</p>
-            <p><strong>Email:</strong> ${user.useremail}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
         </div>
         <button id="logoutBtn" class="button secondary">Выйти</button>`
 };

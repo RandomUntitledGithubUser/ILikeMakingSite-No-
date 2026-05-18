@@ -465,7 +465,7 @@ function initLogin() {
             return;
         }*/
 
-        const result = await loginUser( { email, password } );
+        const result = await loginUser({ email: emailOrUsername, password });
         if (result.success) {
             localStorage.setItem('authToken', result.token);
             await navigate('profile');

@@ -472,21 +472,27 @@ async function saveAdminForm(e) {
     }
 }
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ СТРАНИЦ АВТОРИЗАЦИИ ---
 function initLogin() {
     const form = document.getElementById('loginForm');
     if (!form) return;
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const result = await loginUser({
-            email: document.getElementById('login-email').value,
-            password: document.getElementById('login-password').value
-        });
+        
+        const emailOrUsername = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const msg = document.getElementById('login-message');
+        
+        if (!emailOrUsername || !password) {
+            msg.textContent = "Заполните все поля!";
+            msg.className = 'message error';
+            return;
+        }
+
+        const result = await loginUser({ emailOrUsername, password });
         if (result.success) {
             localStorage.setItem('authToken', result.token);
             await navigate('profile');
         } else {
-            const msg = document.getElementById('login-message');
             if (msg) {
                 msg.textContent = result.message;
                 msg.className = 'message error';
@@ -500,14 +506,37 @@ function initRegister() {
     if (!form) return;
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const result = await registerUser({
-            name: document.getElementById('reg-name').value,
-            email: document.getElementById('reg-email').value,
-            password: document.getElementById('reg-password').value
-        });
+        
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const msg = document.getElementById('register-message');
+
+        if (name.length < 3) {
+            msg.textContent = "Имя должно содержать минимум 3 символа!";
+            msg.className = 'message error';
+            return;
+        }
+        if (!email.includes('@')) {
+            msg.textContent = "Введите корректный Email!";
+            msg.className = 'message error';
+            return;
+        }
+        if (password.length < 6) {
+            msg.textContent = "Пароль должен быть не менее 6 символов!";
+            msg.className = 'message error';
+            return;
+        }
+
+        const result = await registerUser({ name, email, password });
         if (result.success) {
             localStorage.setItem('authToken', result.token);
             await navigate('profile');
+        } else {
+            if (msg) {
+                msg.textContent = result.message || "Ошибка регистрации";
+                msg.className = 'message error';
+            }
         }
     });
 }

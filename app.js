@@ -33,7 +33,7 @@ async function checkAuthStatus() {
             return {
                 authenticated: true,
                 isAdmin: result.user.isAdmin === true || 
-                         result.user.name === 'admin'
+                         result.user.username === 'admin'
             };
         }
     } catch (e) {

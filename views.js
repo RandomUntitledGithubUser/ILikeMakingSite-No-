@@ -187,13 +187,13 @@ const views = {
             <div class="form-footer" style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
                 <p>Уже есть профиль? <a href="#login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Войти</a></p>
             </div>
-        </form>`
+        </form>`,
 
     profile: (user) => `
         <h1>Профиль</h1>
         <div class="card">
-            <p><strong>Имя:</strong> ${user.name}</p>
-            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Имя:</strong> ${user.username}</p>
+            <p><strong>Email:</strong> ${user.useremail}</p>
         </div>
         <button id="logoutBtn" class="button secondary">Выйти</button>`
 };

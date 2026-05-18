@@ -1,6 +1,5 @@
-const API_BASE1 = 'https://77a91edd68ee4a2d-176-60-55-198.serveousercontent.com/api';
+const API_BASE1 = 'https://82623cf6de2a3add-176-60-50-9.serveousercontent.com/api';
 
-// Application Logic Engine
 let currentAdminTab = 'items';
 let cataloguePage = 0;
 let catalogueLoading = false;
@@ -8,7 +7,6 @@ let catalogueHasMore = true;
 let catalogueFilter = { search: '', category: 'all', sortBy: 'createdAt', direction: 'desc' };
 let carouselInterval = null;
 
-// Мост для совместимости регистра букв (views из views.js -> Views в app.js) и алиасов каталога
 if (typeof views !== 'undefined') {
     window.Views = views;
     if (!views.catalogue && views.catalog) {
@@ -16,7 +14,6 @@ if (typeof views !== 'undefined') {
     }
 }
 
-// Auth Fetch Helpers
 function getAuthHeaders() {
     const token = localStorage.getItem("authToken");
     return token ? { 
@@ -36,7 +33,7 @@ async function checkAuthStatus() {
             return {
                 authenticated: true,
                 isAdmin: result.user.isAdmin === true || 
-                         result.user.name === 'admin'
+                         result.user.username === 'admin'
             };
         }
     } catch (e) {
@@ -48,17 +45,14 @@ async function checkAuthStatus() {
 
 const router = {
     navigate(view) {
-        // Устанавливаем хэш, что автоматически вызывает событие hashchange
         window.location.hash = view;
     }
 };
 
-// Переход по путям через хэш
 async function navigate(hashPath) {
     window.location.hash = hashPath;
 }
 
-// Слушатель изменения хэша в URL
 window.addEventListener('hashchange', () => {
     const view = window.location.hash.replace('#', '') || 'home';
     route(view);
@@ -66,14 +60,13 @@ window.addEventListener('hashchange', () => {
 
 async function route(view) {
     clearInterval(carouselInterval);
-    window.onscroll = null; // Сброс бесконечного скролла
+    window.onscroll = null;
     
     const appContainer = document.getElementById("app-content");
     if (!appContainer) return;
 
     const userStatus = await checkAuthStatus();
 
-    // Защита роутов (Guard Conditions)
     const protectedViews = ['cart', 'favorites', 'admin', 'profile'];
     if (protectedViews.includes(view) && !userStatus.authenticated) {
         return navigate('login');
@@ -82,17 +75,14 @@ async function route(view) {
         return navigate('home');
     }
 
-    // Если авторизован, не пускаем на страницы логина/регистрации
     if (userStatus.authenticated && (view === 'login' || view === 'register')) {
         return navigate('profile');
     }
 
-    // Разделяем хэш для проверки наличия динамических ID (например, "catalogue/12")
     const viewParts = view.split('/');
     const viewBase = viewParts[0];
     const dynamicId = viewParts[1];
 
-    // Home Path Routing
     if (viewBase === "home" || viewBase === "") {
         try {
             const res = await fetch(`${API_BASE1}/items/recent`);
@@ -103,7 +93,6 @@ async function route(view) {
             appContainer.innerHTML = Views.home('');
         }
     } 
-    // Item Details View Route (пример хэша: #catalogue/12) - ПЕРЕНЕСЕНО НАВЕРХ И ИСПРАВЛЕНО
     else if ((viewBase === "catalog" || viewBase === "catalogue") && dynamicId) {
         const res = await fetch(`${API_BASE1}/items/${dynamicId}`);
         if(res.ok) {
@@ -113,7 +102,6 @@ async function route(view) {
             appContainer.innerHTML = "<h3>Product not found</h3>";
         }
     } 
-    // Catalogue Path Routing (обычный каталог без конкретного ID)
     else if (viewBase === "catalog" || viewBase === "catalogue") {
         appContainer.innerHTML = Views.catalogue();
         cataloguePage = 0;
@@ -123,7 +111,6 @@ async function route(view) {
         await fetchCataloguePage();
         setupInfiniteScroll();
     } 
-    // Cart Route View
     else if (viewBase === "cart") {
         const res = await fetch(`${API_BASE1}/cart`, { headers: getAuthHeaders() });
         if (!res.ok) {
@@ -134,7 +121,6 @@ async function route(view) {
         const items = await res.json();
         appContainer.innerHTML = Views.cart(items);
     } 
-    // Favorites Route View
     else if (viewBase === "favorites") {
         const res = await fetch(`${API_BASE1}/favorites`, { headers: getAuthHeaders() });
         if (!res.ok) {
@@ -145,12 +131,10 @@ async function route(view) {
         const items = await res.json();
         appContainer.innerHTML = Views.favorites(items);
     } 
-    // Admin Control Panel View
     else if (viewBase === "admin") {
         appContainer.innerHTML = Views.admin();
         await loadAdminData();
     }
-    // Авторизация и ЛК
     else if (viewBase === "login") {
         appContainer.innerHTML = Views.login();
         initLogin();
@@ -160,7 +144,7 @@ async function route(view) {
         initRegister();
     }
     else if (viewBase === "profile") {
-        appContainer.innerHTML = Views.profile({ name: 'Загрузка...', email: '' });
+        appContainer.innerHTML = Views.profile({ username: 'Загрузка...', email: '' });
         const token = localStorage.getItem('authToken');
         const result = await fetchProfile(token);
         if (result.success) {
@@ -170,16 +154,13 @@ async function route(view) {
             return navigate('login');
         }
     }
-    // Fallback Legacy Mapping
     else if (typeof routes !== 'undefined' && routes[viewBase]) {
         appContainer.innerHTML = routes[viewBase]();
     }
 
-    // Автоматически обновляем шапку при каждой смене страницы
     updateHeader();
 }
 
-// --- Carousel Core Engine ---
 function startCarouselLogic() {
     const carousel = document.getElementById("homeCarousel");
     if (!carousel) return;
@@ -194,14 +175,13 @@ function startCarouselLogic() {
     }, 5000);
 }
 
-// --- Catalogue View Filters & Scroll Actions ---
+
 async function fetchCataloguePage() {
     if (catalogueLoading || !catalogueHasMore) return;
     catalogueLoading = true;
     const indicator = document.getElementById("loadingIndicator");
     if (indicator) indicator.style.display = "block";
 
-    // ИСПРАВЛЕНО: Теперь используется базовая константа API_BASE1
     let url = `${API_BASE1}/items?page=${cataloguePage}&size=8&sortBy=${catalogueFilter.sortBy}&direction=${catalogueFilter.direction}&search=${encodeURIComponent(catalogueFilter.search)}`;
     if (catalogueFilter.category !== 'all') {
         url += `&category=${encodeURIComponent(catalogueFilter.category)}`;
@@ -280,7 +260,6 @@ function resetAndReloadCatalogue() {
     fetchCataloguePage();
 }
 
-// --- Purchase Flow Actions ---
 async function addToCart(itemId) {
     const res = await fetch(`${API_BASE1}/cart/add/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
     if(res.ok) alert("Item added to cart!");
@@ -316,7 +295,6 @@ async function removeFav(itemId, rowId) {
     if(res.ok) document.getElementById(`fav-row-${rowId}`)?.remove();
 }
 
-// --- Admin Subsystem Dash Management ---
 async function switchAdminTab(tab) {
     currentAdminTab = tab;
     document.getElementById("tabItemsBtn").classList.toggle("active", tab === 'items');
@@ -384,7 +362,6 @@ async function adminDelete(type, id) {
     }
 }
 
-// --- Admin Forms Creation & Editing Actions ---
 let currentEditTarget = { type: '', id: null };
 
 function openEditModal(type, id, entityEncoded) {
@@ -472,21 +449,27 @@ async function saveAdminForm(e) {
     }
 }
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ СТРАНИЦ АВТОРИЗАЦИИ ---
 function initLogin() {
     const form = document.getElementById('loginForm');
     if (!form) return;
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const result = await loginUser({
-            email: document.getElementById('login-email').value,
-            password: document.getElementById('login-password').value
-        });
+        
+        const emailOrUsername = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const msg = document.getElementById('login-message');
+        
+        /*if (!emailOrUsername || !password) {
+            msg.textContent = "Заполните все поля!";
+            msg.className = 'message error';
+            return;
+        }*/
+
+        const result = await loginUser({ username: emailOrUsername, password });
         if (result.success) {
             localStorage.setItem('authToken', result.token);
             await navigate('profile');
         } else {
-            const msg = document.getElementById('login-message');
             if (msg) {
                 msg.textContent = result.message;
                 msg.className = 'message error';
@@ -500,14 +483,37 @@ function initRegister() {
     if (!form) return;
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const result = await registerUser({
-            name: document.getElementById('reg-name').value,
-            email: document.getElementById('reg-email').value,
-            password: document.getElementById('reg-password').value
-        });
+        
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const msg = document.getElementById('register-message');
+
+        if (name.length < 3) {
+            msg.textContent = "Имя должно содержать минимум 3 символа!";
+            msg.className = 'message error';
+            return;
+        }
+        if (!email.includes('@')) {
+            msg.textContent = "Введите корректный Email!";
+            msg.className = 'message error';
+            return;
+        }
+        if (password.length < 6) {
+            msg.textContent = "Пароль должен быть не менее 6 символов!";
+            msg.className = 'message error';
+            return;
+        }
+
+        const result = await registerUser({ name, email, password });
         if (result.success) {
             localStorage.setItem('authToken', result.token);
             await navigate('profile');
+        } else {
+            if (msg) {
+                msg.textContent = result.message || "Ошибка регистрации";
+                msg.className = 'message error';
+            }
         }
     });
 }
@@ -540,7 +546,6 @@ async function updateHeader() {
     }
 }
 
-// Первоначальный запуск роутинга при загрузке документа по текущему хэшу
 document.addEventListener("DOMContentLoaded", () => {
     const startView = window.location.hash.replace('#', '') || 'home';
     route(startView);

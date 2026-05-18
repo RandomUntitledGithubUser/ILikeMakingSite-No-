@@ -195,5 +195,5 @@ const views = {
             <p><strong>Имя:</strong> ${user.username}</p>
             <p><strong>Email:</strong> ${user.email}</p>
         </div>
-        <button id="logoutBtn" class="button secondary">Выйти</button>`
+        <button id="logoutBtn" class="button secondary" onclick="initLogout()">Выйти</button>`
 };

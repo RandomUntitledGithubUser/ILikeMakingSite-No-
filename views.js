@@ -192,7 +192,7 @@ const views = {
     profile: (user) => `
         <h1>Профиль</h1>
         <div class="card">
-            <p><strong>Имя:</strong> ${user.username}</p>
+            <p><strong>Имя:</strong> ${user.name}</p>
             <p><strong>Email:</strong> ${user.email}</p>
         </div>
         <button id="logoutBtn" class="button secondary" onclick="initLogout()">Выйти</button>`

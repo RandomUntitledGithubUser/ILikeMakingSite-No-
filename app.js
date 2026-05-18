@@ -1,4 +1,4 @@
-const API_BASE1 = 'https://82623cf6de2a3add-176-60-50-9.serveousercontent.com/api';
+const API_BASE1 = 'https://fe972c1cf8d395ad-176-60-50-9.serveousercontent.com/api';
 
 let currentAdminTab = 'items';
 let cataloguePage = 0;
@@ -465,7 +465,7 @@ function initLogin() {
             return;
         }*/
 
-        const result = await loginUser({ username: emailOrUsername, password });
+        const result = await loginUser( { email, password } );
         if (result.success) {
             localStorage.setItem('authToken', result.token);
             await navigate('profile');

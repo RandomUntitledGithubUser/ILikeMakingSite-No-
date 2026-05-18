@@ -144,7 +144,7 @@ async function route(view) {
         initRegister();
     }
     else if (viewBase === "profile") {
-        appContainer.innerHTML = Views.profile({ name: 'Загрузка...', email: '' });
+        appContainer.innerHTML = Views.profile({ username: 'Загрузка...', email: '' });
         const token = localStorage.getItem('authToken');
         const result = await fetchProfile(token);
         if (result.success) {

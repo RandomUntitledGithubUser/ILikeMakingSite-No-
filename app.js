@@ -135,22 +135,22 @@ async function route(viewWithParams) {
             return;
         }
         const items = await res.json();
-        appContainer.innerHTML = Views.favorites(items);
+        appContainer.innerHTML = views.favorites(items);
     } 
     else if (viewBase === "admin") {
-        appContainer.innerHTML = Views.admin();
+        appContainer.innerHTML = views.admin();
         await loadAdminData();
     }
     else if (viewBase === "login") {
-        appContainer.innerHTML = Views.login();
+        appContainer.innerHTML = views.login();
         initLogin();
     }
     else if (viewBase === "register") {
-        appContainer.innerHTML = Views.register();
+        appContainer.innerHTML = views.register();
         initRegister();
     }
     else if (viewBase === "forgot") {
-        appContainer.innerHTML = Views.forgot();
+        appContainer.innerHTML = views.forgot();
         
         document.getElementById('forgotForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -176,7 +176,7 @@ async function route(viewWithParams) {
             return;
         }
 
-        appContainer.innerHTML = Views.reset();
+        appContainer.innerHTML = views.reset();
         initPasswordStrengthListener('reset-password');
 
         document.getElementById('resetForm').addEventListener('submit', async (e) => {
@@ -202,11 +202,11 @@ async function route(viewWithParams) {
         });
     }
     else if (viewBase === "profile") {
-        appContainer.innerHTML = Views.profile({ username: 'Загрузка...', email: '' });
+        appContainer.innerHTML = views.profile({ username: 'Загрузка...', email: '' });
         const token = localStorage.getItem('authToken');
         const result = await fetchProfile(token);
         if (result.success) {
-            appContainer.innerHTML = Views.profile(result.user);
+            appContainer.innerHTML = views.profile(result.user);
         } else {
             localStorage.removeItem('authToken');
             return navigate('login');

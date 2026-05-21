@@ -14,7 +14,6 @@ function createHeaders(token = null) {
 
 async function registerUser({ name, email, password }) {
   const payload = { username: name, email: email, password: password };
-  
   try {
     const res = await fetch(`${API_BASE}/register`, {
       method: 'POST',
@@ -33,7 +32,6 @@ async function registerUser({ name, email, password }) {
 
 async function loginUser({ email, password }) {
   const payload = { emailOrUsername: email, password: password };
-  
   try {
     const res = await fetch(`${API_BASE}/login`, {
       method: 'POST',
@@ -72,11 +70,37 @@ async function fetchProfile(token) {
       return { success: false, message: 'Не удалось загрузить профиль' };
     }
   } catch (error) {
-    return { success: false, message: 'Ошибка сети' };
+    console.error("Fetch error:", error);
+    return { success: false, message: "Сервер недоступен" };
   }
 }
 
-// Глобальный экспорт для app.js
-window.registerUser = registerUser;
-window.loginUser = loginUser;
-window.fetchProfile = fetchProfile;
+// Запрос ссылки восстановления пароля
+async function forgotPasswordAPI(email) {
+  try {
+    const res = await fetch(`${API_BASE}/forgot-password`, {
+      method: 'POST',
+      headers: createHeaders(),
+      body: JSON.stringify({ email: email })
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return { success: false, message: "Сервер недоступен" };
+  }
+}
+
+// Отправка нового пароля с токеном
+async function resetPasswordAPI(token, password) {
+  try {
+    const res = await fetch(`${API_BASE}/reset-password`, {
+      method: 'POST',
+      headers: createHeaders(),
+      body: JSON.stringify({ token: token, password: password })
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return { success: false, message: "Сервер недоступен" };
+  }
+}

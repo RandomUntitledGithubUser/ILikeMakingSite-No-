@@ -1,5 +1,5 @@
 // auth-api.js
-const API_BASE = 'https://30fdccdac4cd4d9b-176-60-22-144.serveousercontent.com/api/auth';
+const API_BASE = 'https://76006142c867419f-176-60-22-202.serveousercontent.com/api/auth';
 
 function createHeaders(token = null) {
   const headers = {
@@ -14,6 +14,7 @@ function createHeaders(token = null) {
 
 async function registerUser({ name, email, password }) {
   const payload = { username: name, email: email, password: password };
+  
   try {
     const res = await fetch(`${API_BASE}/register`, {
       method: 'POST',
@@ -32,6 +33,7 @@ async function registerUser({ name, email, password }) {
 
 async function loginUser({ email, password }) {
   const payload = { emailOrUsername: email, password: password };
+  
   try {
     const res = await fetch(`${API_BASE}/login`, {
       method: 'POST',
@@ -70,41 +72,16 @@ async function fetchProfile(token) {
       return { success: false, message: 'Не удалось загрузить профиль' };
     }
   } catch (error) {
-    console.error("Fetch error:", error);
-    return { success: false, message: "Сервер недоступен" };
+    return { success: false, message: 'Ошибка сети' };
   }
 }
+// =========================================================================
+// НОВЫЕ МЕТОДЫ ДЛЯ ВОССТАНОВЛЕНИЯ ПАРОЛЯ (ДОБАВИТЬ В КОНЕЦ ФАЙЛА AUTH.JS)
+// =========================================================================
 
-// Запрос ссылки восстановления пароля
-async function forgotPasswordAPI(email) {
-  try {
-    const res = await fetch(`${API_BASE}/forgot-password`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify({ email: email })
-    });
-    return await res.json();
-  } catch (error) {
-    console.error("Fetch error:", error);
-    return { success: false, message: "Сервер недоступен" };
-  }
-}
-
-// Отправка нового пароля с токеном
-async function resetPasswordAPI(token, password) {
-  try {
-    const res = await fetch(`${API_BASE}/reset-password`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify({ token: token, password: password })
-    });
-    return await res.json();
-  } catch (error) {
-    console.error("Fetch error:", error);
-    return { success: false, message: "Сервер недоступен" };
-  }
-}
-/*---------*/
+/**
+ * Отправка запроса на восстановление пароля (генерация токена)
+ */
 async function forgotUserPassword(email) {
   try {
     const res = await fetch(`${API_BASE}/forgot-password`, {
@@ -141,3 +118,7 @@ async function resetUserPassword(token, password) {
     return { success: false, message: "Сервер недоступен" };
   }
 }
+// Глобальный экспорт для app.js
+window.registerUser = registerUser;
+window.loginUser = loginUser;
+window.fetchProfile = fetchProfile;

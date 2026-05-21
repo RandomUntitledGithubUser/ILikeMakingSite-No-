@@ -1,4 +1,4 @@
-const API_BASE1 = 'https://30fdccdac4cd4d9b-176-60-22-144.serveousercontent.com/api';
+const API_BASE1 = 'https://76006142c867419f-176-60-22-202.serveousercontent.com/api';
 
 let currentAdminTab = 'items';
 let cataloguePage = 0;
@@ -42,6 +42,7 @@ async function checkAuthStatus() {
     return { authenticated: false, isAdmin: false };
 }
 
+
 const router = {
     navigate(view) {
         window.location.hash = view;
@@ -57,38 +58,31 @@ window.addEventListener('hashchange', () => {
     route(view);
 });
 
-// ЕДИНЫЙ РОУТЕР (СТАРАЯ СТРУКТУРА + ПОДДЕРЖКА QUERY PARAMS И НОВЫХ СТРАНИЦ)
-async function route(viewWithParams) {
+async function route(view) {
     clearInterval(carouselInterval);
     window.onscroll = null;
     
     const appContainer = document.getElementById("app-content");
     if (!appContainer) return;
 
-    // Выделяем чистый путь и параметры (нужно для сброса пароля: reset?token=...)
-    const cleanView = viewWithParams.split('?')[0];
-    const queryString = viewWithParams.split('?')[1] || '';
-    const urlParams = new URLSearchParams(queryString);
-
     const userStatus = await checkAuthStatus();
 
-    // Проверка защищенных роутов
     const protectedViews = ['cart', 'favorites', 'admin', 'profile'];
-    if (protectedViews.includes(cleanView) && !userStatus.authenticated) {
+    if (protectedViews.includes(view) && !userStatus.authenticated) {
         return navigate('login');
     }
-    if (cleanView === 'admin' && !userStatus.isAdmin) {
+    if (view === 'admin' && !userStatus.isAdmin) {
         return navigate('home');
     }
-    if (userStatus.authenticated && (cleanView === 'login' || cleanView === 'register')) {
+
+    if (userStatus.authenticated && (view === 'login' || view === 'register')) {
         return navigate('profile');
     }
 
-    const viewParts = cleanView.split('/');
+    const viewParts = view.split('/');
     const viewBase = viewParts[0];
     const dynamicId = viewParts[1];
 
-    // Отрисовка страниц
     if (viewBase === "home" || viewBase === "") {
         try {
             const res = await fetch(`${API_BASE1}/items/recent`);
@@ -121,7 +115,7 @@ async function route(viewWithParams) {
         const res = await fetch(`${API_BASE1}/cart`, { headers: getAuthHeaders() });
         if (!res.ok) {
             console.error("Ошибка загрузки корзины:", res.status);
-            appContainer.innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить корзину.</p>`;
+            document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить корзину.</p>`;
             return;
         }
         const items = await res.json();
@@ -131,82 +125,30 @@ async function route(viewWithParams) {
         const res = await fetch(`${API_BASE1}/favorites`, { headers: getAuthHeaders() });
         if (!res.ok) {
             console.error("Ошибка загрузки избранного:", res.status);
-            appContainer.innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить избранное.</p>`;
+            document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить избранное.</p>`;
             return;
         }
         const items = await res.json();
-        appContainer.innerHTML = views.favorites(items);
+        appContainer.innerHTML = Views.favorites(items);
     } 
     else if (viewBase === "admin") {
-        appContainer.innerHTML = views.admin();
+        appContainer.innerHTML = Views.admin();
         await loadAdminData();
     }
     else if (viewBase === "login") {
-        appContainer.innerHTML = views.login();
+        appContainer.innerHTML = Views.login();
         initLogin();
     }
     else if (viewBase === "register") {
-        appContainer.innerHTML = views.register();
+        appContainer.innerHTML = Views.register();
         initRegister();
     }
-    else if (viewBase === "forgot") {
-        appContainer.innerHTML = views.forgot();
-        
-        document.getElementById('forgotForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('forgot-email').value;
-            const msg = document.getElementById('forgot-message');
-            msg.textContent = "Отправка ссылки...";
-            msg.className = 'message';
-
-            const result = await forgotPasswordAPI(email);
-            if (result.success) {
-                msg.textContent = result.message;
-                msg.className = 'message success';
-            } else {
-                msg.textContent = result.message;
-                msg.className = 'message error';
-            }
-        });
-    }
-    else if (viewBase === "reset") {
-        const token = urlParams.get('token');
-        if (!token) {
-            appContainer.innerHTML = `<h1>Ошибка</h1><p class="card" style="color:red; text-align:center;">Токен восстановления не найден в URL ссылке.</p>`;
-            return;
-        }
-
-        appContainer.innerHTML = views.reset();
-        initPasswordStrengthListener('reset-password');
-
-        document.getElementById('resetForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const password = document.getElementById('reset-password').value;
-            const confirmPassword = document.getElementById('reset-password-confirm').value;
-            const msg = document.getElementById('reset-message');
-
-            if (password !== confirmPassword) {
-                msg.textContent = "Пароли не совпадают!";
-                msg.className = 'message error';
-                return;
-            }
-
-            const result = await resetPasswordAPI(token, password);
-            if (result.success) {
-                alert("Пароль успешно изменен! Войдите с новым паролем.");
-                window.location.hash = 'login';
-            } else {
-                msg.textContent = result.message;
-                msg.className = 'message error';
-            }
-        });
-    }
     else if (viewBase === "profile") {
-        appContainer.innerHTML = views.profile({ username: 'Загрузка...', email: '' });
+        appContainer.innerHTML = Views.profile({ username: 'Загрузка...', email: '' });
         const token = localStorage.getItem('authToken');
         const result = await fetchProfile(token);
         if (result.success) {
-            appContainer.innerHTML = views.profile(result.user);
+            appContainer.innerHTML = Views.profile(result.user);
         } else {
             localStorage.removeItem('authToken');
             return navigate('login');
@@ -216,57 +158,7 @@ async function route(viewWithParams) {
         appContainer.innerHTML = routes[viewBase]();
     }
 
-    await updateHeader();
-}
-
-// ФУНКЦИЯ ВАЛИДАЦИИ СЛОЖНОСТИ ПАРОЛЯ
-function initPasswordStrengthListener(inputId) {
-    const input = document.getElementById(inputId);
-    const bar = document.getElementById('strength-bar');
-    const text = document.getElementById('strength-text');
-    
-    if (!input || !bar || !text) return;
-
-    input.addEventListener('input', () => {
-        const val = input.value;
-        if (!val) {
-            bar.style.width = '0%';
-            text.textContent = 'Введите пароль';
-            text.style.color = 'var(--text-muted)';
-            return;
-        }
-
-        if (val.length < 6) {
-            bar.style.width = '25%';
-            bar.style.backgroundColor = '#ef4444';
-            text.textContent = 'Опасный (минимум 6 символов)';
-            text.style.color = '#ef4444';
-            return;
-        }
-
-        let score = 0;
-        if (/[a-z]/.test(val)) score++;
-        if (/[A-Z]/.test(val)) score++;
-        if (/[0-9]/.test(val)) score++;
-        if (/[^A-Za-z0-9]/.test(val)) score++;
-
-        if (score === 1) {
-            bar.style.width = '50%';
-            bar.style.backgroundColor = '#f97316';
-            text.textContent = 'Слабый';
-            text.style.color = '#f97316';
-        } else if (score === 2 || score === 3) {
-            bar.style.width = '75%';
-            bar.style.backgroundColor = '#eab308';
-            text.textContent = 'Хороший';
-            text.style.color = '#eab308';
-        } else if (score === 4) {
-            bar.style.width = '100%';
-            bar.style.backgroundColor = '#10b981';
-            text.textContent = 'Отличный';
-            text.style.color = '#10b981';
-        }
-    });
+    updateHeader();
 }
 
 function startCarouselLogic() {
@@ -283,6 +175,7 @@ function startCarouselLogic() {
     }, 5000);
 }
 
+
 async function fetchCataloguePage() {
     if (catalogueLoading || !catalogueHasMore) return;
     catalogueLoading = true;
@@ -296,6 +189,7 @@ async function fetchCataloguePage() {
 
     try {
         const token = localStorage.getItem('authToken');
+
         const res = await fetch(url, {
             method: 'GET',
             headers: {
@@ -305,7 +199,9 @@ async function fetchCataloguePage() {
             }
         });
 
-        if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`);
+        if (!res.ok) {
+            throw new Error(`Ошибка сервера: ${res.status}`);
+        }
 
         const data = await res.json();
         const grid = document.getElementById("catalogueGrid");
@@ -412,14 +308,12 @@ async function loadAdminData() {
     if (!th || !tbody) return;
     th.innerHTML = ""; tbody.innerHTML = "";
 
-
-
     if (currentAdminTab === 'items') {
         th.innerHTML = "<th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th>";
         const res = await fetch(`${API_BASE1}/admin/items`, { headers: getAuthHeaders() });
         if (!res.ok) {
-            tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки товаров: ${res.status} (Доступ запрещен)</td></tr>`;
-            return;
+                tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки товаров: ${res.status} (Доступ запрещен)</td></tr>`;
+                return;
         }
         const items = await res.json();
         items.forEach(item => {
@@ -440,8 +334,8 @@ async function loadAdminData() {
         th.innerHTML = "<th>ID</th><th>Username</th><th>Email</th><th>Is Admin</th><th>Actions</th>";
         const res = await fetch(`${API_BASE1}/admin/users`, { headers: getAuthHeaders() });
         if (!res.ok) {
-            tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки товаров: ${res.status} (Доступ запрещен)</td></tr>`;
-            return;
+                tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки товаров: ${res.status} (Доступ запрещен)</td></tr>`;
+                return;
         }
         const users = await res.json();
         users.forEach(u => {
@@ -564,6 +458,12 @@ function initLogin() {
         const emailOrUsername = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
         const msg = document.getElementById('login-message');
+        
+        /*if (!emailOrUsername || !password) {
+            msg.textContent = "Заполните все поля!";
+            msg.className = 'message error';
+            return;
+        }*/
 
         const result = await loginUser({ email: emailOrUsername, password });
         if (result.success) {
@@ -581,17 +481,12 @@ function initLogin() {
 function initRegister() {
     const form = document.getElementById('registerForm');
     if (!form) return;
-    
-    // Инициализация шкалы сложности пароля для регистрации
-    initPasswordStrengthListener('reg-password');
-
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const name = document.getElementById('reg-name').value.trim();
         const email = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value;
-        const confirmPassword = document.getElementById('reg-password-confirm')?.value;
         const msg = document.getElementById('register-message');
 
         if (name.length < 3) {
@@ -606,11 +501,6 @@ function initRegister() {
         }
         if (password.length < 6) {
             msg.textContent = "Пароль должен быть не менее 6 символов!";
-            msg.className = 'message error';
-            return;
-        }
-        if (confirmPassword && password !== confirmPassword) {
-            msg.textContent = "Пароли не совпадают!";
             msg.className = 'message error';
             return;
         }
@@ -649,13 +539,17 @@ async function updateHeader() {
         authZone.innerHTML = `
             ${adminButton}
             <a href="#profile" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
-            <button class="button" style="display:inline-block; width:auto; padding:0.4rem 1rem;" onclick="initLogout()">Выйти</button>
+            <button class="button" onclick="initLogout()">Выйти</button>
         `;
     } else {
-        authZone.innerHTML = `<a href="#login" class="button" style="text-decoration: none; display: inline-block; text-align: center; line-height: 2.4; padding:0 1.5rem;">Войти</a>`;
+        authZone.innerHTML = `<button class="button" onclick="router.navigate('login')">Войти</button>`;
     }
 }
-/*--------------------------------------------------------------------*/
+
+
+/**
+ * Валидация состава пароля по регулярным выражениям и обновление индикатора
+ */
 function attachPasswordStrengthChecker(inputId, barId, textId) {
     const passwordInput = document.getElementById(inputId);
     const bar = document.getElementById(barId);

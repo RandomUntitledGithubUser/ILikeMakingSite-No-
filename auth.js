@@ -1,4 +1,4 @@
-// auth.js
+// auth-api.js
 const API_BASE = 'https://a7d63ace255ba652-176-60-52-155.serveousercontent.com/api/auth';
 
 function createHeaders(token = null) {
@@ -56,7 +56,6 @@ async function fetchProfile(token) {
       method: 'GET',
       headers: createHeaders(token),
     });
-
     if (res.status === 200) {
       const data = await res.json();
       return {
@@ -75,6 +74,7 @@ async function fetchProfile(token) {
     return { success: false, message: 'Ошибка сети' };
   }
 }
+
 // =========================================================================
 // НОВЫЕ МЕТОДЫ ДЛЯ ВОССТАНОВЛЕНИЯ ПАРОЛЯ (ДОБАВИТЬ В КОНЕЦ ФАЙЛА AUTH.JS)
 // =========================================================================
@@ -118,7 +118,10 @@ async function resetUserPassword(token, password) {
     return { success: false, message: "Сервер недоступен" };
   }
 }
+
 // Глобальный экспорт для app.js
 window.registerUser = registerUser;
 window.loginUser = loginUser;
 window.fetchProfile = fetchProfile;
+window.forgotUserPassword = forgotUserPassword;
+window.resetUserPassword = resetUserPassword;

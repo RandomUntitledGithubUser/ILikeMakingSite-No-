@@ -104,3 +104,40 @@ async function resetPasswordAPI(token, password) {
     return { success: false, message: "Сервер недоступен" };
   }
 }
+/*---------*/
+async function forgotUserPassword(email) {
+  try {
+    const res = await fetch(`${API_BASE}/forgot-password`, {
+      method: 'POST',
+      headers: createHeaders(),
+      body: JSON.stringify({ email: email })
+    });
+    if (!res.ok) {
+      return { success: false, message: `Ошибка сервера: Статус ${res.status}` };
+    }
+    return await res.json();
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return { success: false, message: "Сервер недоступен" };
+  }
+}
+
+/**
+ * Сброс пароля с использованием полученного токена
+ */
+async function resetUserPassword(token, password) {
+  try {
+    const res = await fetch(`${API_BASE}/reset-password`, {
+      method: 'POST',
+      headers: createHeaders(),
+      body: JSON.stringify({ token: token, password: password })
+    });
+    if (!res.ok) {
+      return { success: false, message: `Ошибка сервера: Статус ${res.status}` };
+    }
+    return await res.json();
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return { success: false, message: "Сервер недоступен" };
+  }
+}

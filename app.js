@@ -246,4 +246,417 @@ function initPasswordStrengthListener(inputId) {
 
         let score = 0;
         if (/[a-z]/.test(val)) score++;
-        if (/[A-Z]
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        if (score === 1) {
+            bar.style.width = '50%';
+            bar.style.backgroundColor = '#f97316';
+            text.textContent = 'Слабый';
+            text.style.color = '#f97316';
+        } else if (score === 2 || score === 3) {
+            bar.style.width = '75%';
+            bar.style.backgroundColor = '#eab308';
+            text.textContent = 'Хороший';
+            text.style.color = '#eab308';
+        } else if (score === 4) {
+            bar.style.width = '100%';
+            bar.style.backgroundColor = '#10b981';
+            text.textContent = 'Отличный';
+            text.style.color = '#10b981';
+        }
+    });
+}
+
+function startCarouselLogic() {
+    const carousel = document.getElementById("homeCarousel");
+    if (!carousel) return;
+    const slides = carousel.querySelectorAll(".carousel-slide");
+    if (slides.length <= 1) return;
+    
+    let currentSlide = 0;
+    carouselInterval = setInterval(() => {
+        slides[currentSlide].classList.remove("active");
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides[currentSlide].classList.add("active");
+    }, 5000);
+}
+
+async function fetchCataloguePage() {
+    if (catalogueLoading || !catalogueHasMore) return;
+    catalogueLoading = true;
+    const indicator = document.getElementById("loadingIndicator");
+    if (indicator) indicator.style.display = "block";
+
+    let url = `${API_BASE1}/items?page=${cataloguePage}&size=8&sortBy=${catalogueFilter.sortBy}&direction=${catalogueFilter.direction}&search=${encodeURIComponent(catalogueFilter.search)}`;
+    if (catalogueFilter.category !== 'all') {
+        url += `&category=${encodeURIComponent(catalogueFilter.category)}`;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken');
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'bypass-tunnel-reminder': 'true',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}) 
+            }
+        });
+
+        if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`);
+
+        const data = await res.json();
+        const grid = document.getElementById("catalogueGrid");
+        
+        if (data.content.length === 0) {
+            catalogueHasMore = false;
+        } else {
+            data.content.forEach(item => {
+                if (grid) grid.insertAdjacentHTML('beforeend', Views.productCard(item));
+            });
+            cataloguePage++;
+            catalogueHasMore = !data.last;
+        }
+    } catch (e) {
+        console.error("Ошибка загрузки каталога:", e);
+    } finally {
+        if (indicator) indicator.style.display = "none";
+        catalogueLoading = false;
+    }
+}
+
+function setupInfiniteScroll() {
+    window.onscroll = () => {
+        if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 100) {
+            fetchCataloguePage();
+        }
+    };
+}
+
+let searchTimeout;
+function triggerSearch(val) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        catalogueFilter.search = val;
+        resetAndReloadCatalogue();
+    }, 400);
+}
+
+function triggerCategory(val) {
+    catalogueFilter.category = val;
+    resetAndReloadCatalogue();
+}
+
+function triggerSort(val) {
+    const parts = val.split("-");
+    catalogueFilter.sortBy = parts[0];
+    catalogueFilter.direction = parts[1];
+    resetAndReloadCatalogue();
+}
+
+function resetAndReloadCatalogue() {
+    cataloguePage = 0;
+    catalogueHasMore = true;
+    const grid = document.getElementById("catalogueGrid");
+    if (grid) grid.innerHTML = "";
+    fetchCataloguePage();
+}
+
+async function addToCart(itemId) {
+    const res = await fetch(`${API_BASE1}/cart/add/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
+    if(res.ok) alert("Item added to cart!");
+    else alert("Please login first.");
+}
+
+async function toggleFav(itemId) {
+    const res = await fetch(`${API_BASE1}/favorites/toggle/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
+    if(res.ok) {
+        const data = await res.json();
+        alert(data.added ? "Added to favorites!" : "Removed from favorites!");
+    } else {
+        alert("Please login first.");
+    }
+}
+
+async function updateQty(rowId, newQty) {
+    if (newQty <= 0) {
+        await removeFromCart(rowId);
+        return;
+    }
+    const res = await fetch(`${API_BASE1}/cart/quantity/${rowId}?quantity=${newQty}`, { method: 'PUT', headers: getAuthHeaders() });
+    if(res.ok) route('cart');
+}
+
+async function removeFromCart(rowId) {
+    const res = await fetch(`${API_BASE1}/cart/remove/${rowId}`, { method: 'DELETE', headers: getAuthHeaders() });
+    if(res.ok) document.getElementById(`cart-row-${rowId}`)?.remove();
+}
+
+async function removeFav(itemId, rowId) {
+    const res = await fetch(`${API_BASE1}/favorites/toggle/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
+    if(res.ok) document.getElementById(`fav-row-${rowId}`)?.remove();
+}
+
+async function switchAdminTab(tab) {
+    currentAdminTab = tab;
+    document.getElementById("tabItemsBtn").classList.toggle("active", tab === 'items');
+    document.getElementById("tabUsersBtn").classList.toggle("active", tab === 'users');
+    await loadAdminData();
+}
+
+async function loadAdminData() {
+    const th = document.getElementById("adminTh");
+    const tbody = document.getElementById("adminTbody");
+    if (!th || !tbody) return;
+    th.innerHTML = ""; tbody.innerHTML = "";
+
+
+
+    if (currentAdminTab === 'items') {
+        th.innerHTML = "<th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th>";
+        const res = await fetch(`${API_BASE1}/admin/items`, { headers: getAuthHeaders() });
+        if (!res.ok) {
+            tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки товаров: ${res.status} (Доступ запрещен)</td></tr>`;
+            return;
+        }
+        const items = await res.json();
+        items.forEach(item => {
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td>${item.id}</td>
+                    <td>${item.itemName}</td>
+                    <td>${item.itemCategory}</td>
+                    <td>${item.itemPrice}</td>
+                    <td>
+                        <button onclick="openEditModal('items', ${item.id}, '${encodeURIComponent(JSON.stringify(item))}')">Edit</button>
+                        <button class="btn-danger" onclick="adminDelete('items', ${item.id})">Delete</button>
+                    </td>
+                </tr>
+            `);
+        });
+    } else {
+        th.innerHTML = "<th>ID</th><th>Username</th><th>Email</th><th>Is Admin</th><th>Actions</th>";
+        const res = await fetch(`${API_BASE1}/admin/users`, { headers: getAuthHeaders() });
+        if (!res.ok) {
+            tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки товаров: ${res.status} (Доступ запрещен)</td></tr>`;
+            return;
+        }
+        const users = await res.json();
+        users.forEach(u => {
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td>${u.id}</td>
+                    <td>${u.username}</td>
+                    <td>${u.email}</td>
+                    <td>${u.admin ? 'Yes' : 'No'}</td>
+                    <td>
+                        <button onclick="openEditModal('users', ${u.id}, '${encodeURIComponent(JSON.stringify(u))}')">Edit</button>
+                        <button class="btn-danger" onclick="adminDelete('users', ${u.id})">Delete</button>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+}
+
+async function adminDelete(type, id) {
+    if (confirm("Вы уверены, что хотите это сделать?")) {
+        const res = await fetch(`${API_BASE1}/admin/${type}/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+        if (res.ok) loadAdminData();
+    }
+}
+
+let currentEditTarget = { type: '', id: null };
+
+function openEditModal(type, id, entityEncoded) {
+    const entity = JSON.parse(decodeURIComponent(entityEncoded));
+    currentEditTarget = { type, id };
+    document.getElementById("modalTitle").innerText = "Modify Details";
+    const fields = document.getElementById("modalFields");
+    fields.innerHTML = "";
+
+    if (type === 'items') {
+        fields.innerHTML = `
+            <div class="form-group"><label>Name</label><input type="text" id="formItemName" value="${entity.itemName}" required /></div>
+            <div class="form-group"><label>Category</label><input type="text" id="formItemCategory" value="${entity.itemCategory || ''}" required /></div>
+            <div class="form-group"><label>Price</label><input type="number" step="0.01" id="formItemPrice" value="${entity.itemPrice}" required /></div>
+            <div class="form-group"><label>Description</label><textarea id="formItemDesc">${entity.itemDesc || ''}</textarea></div>
+            <div class="form-group"><label>Image URL</label><input type="text" id="formItemImg" value="${entity.itemImageUrl || ''}" /></div>
+        `;
+    } else {
+        fields.innerHTML = `
+            <div class="form-group"><label>Username</label><input type="text" id="formUserUsername" value="${entity.username}" required /></div>
+            <div class="form-group"><label>Email</label><input type="email" id="formUserEmail" value="${entity.email}" required /></div>
+            <div class="form-group"><label>Is Admin</label><select id="formUserAdmin"><option value="true" ${entity.admin ? 'selected':''}>Yes</option><option value="false" ${!entity.admin ? 'selected':''}>No</option></select></div>
+        `;
+    }
+    document.getElementById("adminModal").style.display = "flex";
+}
+
+function openCreateModal() {
+    if (currentAdminTab === 'users') {
+        alert("User creation via admin panel is locked. Users must register standardly.");
+        return;
+    }
+    currentEditTarget = { type: 'items', id: null };
+    document.getElementById("modalTitle").innerText = "Add New Item";
+    document.getElementById("modalFields").innerHTML = `
+        <div class="form-group"><label>Name</label><input type="text" id="formItemName" required /></div>
+        <div class="form-group"><label>Category</label><input type="text" id="formItemCategory" required /></div>
+        <div class="form-group"><label>Price</label><input type="number" step="0.01" id="formItemPrice" required /></div>
+        <div class="form-group"><label>Description</label><textarea id="formItemDesc"></textarea></div>
+        <div class="form-group"><label>Image URL</label><input type="text" id="formItemImg" /></div>
+    `;
+    document.getElementById("adminModal").style.display = "flex";
+}
+
+function closeAdminModal() {
+    document.getElementById("adminModal").style.display = "none";
+}
+
+async function saveAdminForm(e) {
+    e.preventDefault();
+    const { type, id } = currentEditTarget;
+    let body = {};
+    let url = `${API_BASE1}/admin/${type}`;
+    let method = id ? 'PUT' : 'POST';
+
+    if (id) url += `/${id}`;
+
+    if (type === 'items') {
+        body = {
+            itemName: document.getElementById("formItemName").value,
+            itemCategory: document.getElementById("formItemCategory").value,
+            itemPrice: parseFloat(document.getElementById("formItemPrice").value),
+            itemDesc: document.getElementById("formItemDesc").value,
+            itemImageUrl: document.getElementById("formItemImg").value
+        };
+    } else {
+        body = {
+            username: document.getElementById("formUserUsername").value,
+            email: document.getElementById("formUserEmail").value,
+            admin: document.getElementById("formUserAdmin").value === "true"
+        };
+    }
+
+    const res = await fetch(url, {
+        method: method,
+        headers: getAuthHeaders(),
+        body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+        closeAdminModal();
+        loadAdminData();
+    } else {
+        alert("Save transaction failed.");
+    }
+}
+
+function initLogin() {
+    const form = document.getElementById('loginForm');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const emailOrUsername = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const msg = document.getElementById('login-message');
+
+        const result = await loginUser({ email: emailOrUsername, password });
+        if (result.success) {
+            localStorage.setItem('authToken', result.token);
+            await navigate('profile');
+        } else {
+            if (msg) {
+                msg.textContent = result.message;
+                msg.className = 'message error';
+            }
+        }
+    });
+}
+
+function initRegister() {
+    const form = document.getElementById('registerForm');
+    if (!form) return;
+    
+    // Инициализация шкалы сложности пароля для регистрации
+    initPasswordStrengthListener('reg-password');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const confirmPassword = document.getElementById('reg-password-confirm')?.value;
+        const msg = document.getElementById('register-message');
+
+        if (name.length < 3) {
+            msg.textContent = "Имя должно содержать минимум 3 символа!";
+            msg.className = 'message error';
+            return;
+        }
+        if (!email.includes('@')) {
+            msg.textContent = "Введите корректный Email!";
+            msg.className = 'message error';
+            return;
+        }
+        if (password.length < 6) {
+            msg.textContent = "Пароль должен быть не менее 6 символов!";
+            msg.className = 'message error';
+            return;
+        }
+        if (confirmPassword && password !== confirmPassword) {
+            msg.textContent = "Пароли не совпадают!";
+            msg.className = 'message error';
+            return;
+        }
+
+        const result = await registerUser({ name, email, password });
+        if (result.success) {
+            localStorage.setItem('authToken', result.token);
+            await navigate('profile');
+        } else {
+            if (msg) {
+                msg.textContent = result.message || "Ошибка регистрации";
+                msg.className = 'message error';
+            }
+        }
+    });
+}
+
+function initLogout() {
+    localStorage.removeItem('authToken');
+    navigate('login');
+}
+
+async function updateHeader() {
+    const authZone = document.getElementById('auth-zone');
+    if (!authZone) return;
+    
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        const auth = await checkAuthStatus();
+        
+        let adminButton = '';
+        if (auth.isAdmin) {
+            adminButton = `<a href="#admin" style="margin-right: 15px; color: #e74c3c; text-decoration: none; font-weight: 600;">Админка</a>`;
+        }
+
+        authZone.innerHTML = `
+            ${adminButton}
+            <a href="#profile" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
+            <button class="button" style="display:inline-block; width:auto; padding:0.4rem 1rem;" onclick="initLogout()">Выйти</button>
+        `;
+    } else {
+        authZone.innerHTML = `<a href="#login" class="button" style="text-decoration: none; display: inline-block; text-align: center; line-height: 2.4; padding:0 1.5rem;">Войти</a>`;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const startView = window.location.hash.replace('#', '') || 'home';
+    route(startView);
+});

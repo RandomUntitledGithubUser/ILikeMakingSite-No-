@@ -655,6 +655,170 @@ async function updateHeader() {
         authZone.innerHTML = `<a href="#login" class="button" style="text-decoration: none; display: inline-block; text-align: center; line-height: 2.4; padding:0 1.5rem;">Войти</a>`;
     }
 }
+/*--------------------------------------------------------------------*/
+function attachPasswordStrengthChecker(inputId, barId, textId) {
+    const passwordInput = document.getElementById(inputId);
+    const bar = document.getElementById(barId);
+    const textElement = document.getElementById(textId);
+    
+    if (!passwordInput || !bar || !textElement) return;
+
+    passwordInput.addEventListener('input', (e) => {
+        const password = e.target.value;
+        
+        // Старое требование: минимальная длина 6 символов
+        if (!password || password.length < 6) {
+            bar.style.width = '10%';
+            bar.style.backgroundColor = '#ef4444'; // Опасный/короткий
+            textElement.textContent = 'Слишком короткий (мин. 6 символов)';
+            textElement.style.color = '#ef4444';
+            return;
+        }
+
+        let score = 0;
+        if (/[a-z]/.test(password)) score++;      // Наличие строчных
+        if (/[A-Z]/.test(password)) score++;      // Наличие прописных
+        if (/[0-9]/.test(password)) score++;      // Наличие цифр
+        if (/[^A-Za-z0-9]/.test(password)) score++; // Специальные символы
+
+        // Динамическое изменение уровня сложности
+        if (score === 1) {
+            bar.style.width = '30%';
+            bar.style.backgroundColor = '#ef4444'; // Красный (Опасный)
+            textElement.textContent = 'Слабый пароль (опасный)';
+            textElement.style.color = '#ef4444';
+        } else if (score === 2) {
+            bar.style.width = '50%';
+            bar.style.backgroundColor = '#f59e0b'; // Оранжевый
+            textElement.textContent = 'Средний уровень сложности';
+            textElement.style.color = '#f59e0b';
+        } else if (score === 3) {
+            bar.style.width = '75%';
+            bar.style.backgroundColor = '#3b82f6'; // Синий
+            textElement.textContent = 'Хороший пароль';
+            textElement.style.color = '#3b82f6';
+        } else if (score === 4) {
+            bar.style.width = '100%';
+            bar.style.backgroundColor = '#10b981'; // Зеленый (Отличный)
+            textElement.textContent = 'Отличный, безопасный пароль!';
+            textElement.style.color = '#10b981';
+        }
+    });
+}
+
+/**
+ * Инициализация логики отправки формы forgotPassword
+ */
+function initForgotPasswordFormLogic() {
+    const form = document.getElementById('forgotPasswordForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('forgot-email').value;
+        const msg = document.getElementById('forgot-message');
+        
+        msg.textContent = "Отправка запроса...";
+        msg.className = "message";
+
+        const result = await forgotUserPassword(email);
+        if (result.success) {
+            msg.textContent = result.message || "Инструкция и токен успешно отправлены на вашу почту!";
+            msg.className = "message success";
+            // Автоматический переход на форму ввода токена через 3 секунды
+            setTimeout(() => { window.location.hash = '#reset-password'; }, 3000);
+        } else {
+            msg.textContent = result.message || "Ошибка отправки. Проверьте правильность Email.";
+            msg.className = "message error";
+        }
+    });
+}
+
+/**
+ * Инициализация логики отправки формы resetPassword
+ */
+function initResetPasswordFormLogic() {
+    const form = document.getElementById('resetPasswordForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = document.getElementById('reset-token').value;
+        const password = document.getElementById('reset-password-field').value;
+        const msg = document.getElementById('reset-message');
+
+        if (password.length < 6) {
+            msg.textContent = "Ошибка: Пароль должен содержать от 6 символов.";
+            msg.className = "message error";
+            return;
+        }
+
+        msg.textContent = "Обновление пароля...";
+        msg.className = "message";
+
+        const result = await resetUserPassword(token, password);
+        if (result.success) {
+            msg.textContent = result.message || "Пароль успешно изменен! Сейчас вы будете перенаправлены.";
+            msg.className = "message success";
+            setTimeout(() => { window.location.hash = '#login'; }, 2500);
+        } else {
+            msg.textContent = result.message || "Не удалось сбросить пароль. Неверный или истекший токен.";
+            msg.className = "message error";
+        }
+    });
+}
+
+/**
+ * Дополнительный перехватчик хешей для кастомных страниц восстановления пароля
+ */
+function handleRecoveryPagesRouting() {
+    const hash = window.location.hash || '#home';
+    const appContent = document.getElementById('app-content');
+    if (!appContent) return;
+
+    if (hash === '#forgot-password') {
+        appContent.innerHTML = views.forgotPassword();
+        initForgotPasswordFormLogic();
+    } else if (hash.startsWith('#reset-password')) {
+        appContent.innerHTML = views.resetPassword();
+        
+        // Если токен передан в url как параметр (?token=XYZ) - парсим его в инпут автоматически
+        if (hash.includes('?')) {
+            const queryParams = new URLSearchParams(hash.split('?')[1]);
+            const tokenFromUrl = queryParams.get('token');
+            if (tokenFromUrl) {
+                const tokenInput = document.getElementById('reset-token');
+                if (tokenInput) tokenInput.value = tokenFromUrl;
+            }
+        }
+        
+        // Привязываем проверку сложности к форме сброса пароля
+        attachPasswordStrengthChecker('reset-password-field', 'reset-strength-bar', 'reset-strength-text');
+        initResetPasswordFormLogic();
+    }
+}
+
+// Слушатели для интеграции в SPA-структуру
+window.addEventListener('hashchange', handleRecoveryPagesRouting);
+
+window.addEventListener('DOMContentLoaded', () => {
+    // Вызов при первичной загрузке страницы
+    handleRecoveryPagesRouting();
+
+    // Отслеживаем динамический рендеринг стандартного шаблона #register через MutationObserver
+    // Это гарантирует работу индикатора сложности при любом способе переключения страниц
+    const appContent = document.getElementById('app-content');
+    if (appContent) {
+        const observer = new MutationObserver(() => {
+            if (document.getElementById('reg-password') && !document.getElementById('strength-bar-bound')) {
+                const regInput = document.getElementById('reg-password');
+                regInput.setAttribute('id-bound', 'true');
+                attachPasswordStrengthChecker('reg-password', 'strength-bar', 'strength-text');
+            }
+        });
+        observer.observe(appContent, { childList: true, subtree: true });
+    }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     const startView = window.location.hash.replace('#', '') || 'home';

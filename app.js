@@ -36,162 +36,121 @@ async function checkAuthStatus() {
                          result.user.username === 'admin'
             };
         }
-        return { authenticated: false, isAdmin: false };
-    } catch(e) {
-        return { authenticated: false, isAdmin: false };
+    } catch (e) {
+        console.error("Ошибка проверки сессии:", e);
     }
+    return { authenticated: false, isAdmin: false };
 }
 
-function initLogout() {
-    localStorage.removeItem('authToken');
-    updateHeader();
-    window.location.hash = 'login';
-}
-
-async function updateHeader() {
-    const authZone = document.getElementById('auth-zone');
-    if (!authZone) return;
-    
-    const token = localStorage.getItem('authToken');
-    if (token) {
-        const auth = await checkAuthStatus();
-        let adminButton = '';
-        if (auth.isAdmin) {
-            adminButton = `<a href="#admin" style="margin-right: 15px; color: #e74c3c; text-decoration: none; font-weight: 600;">Админка</a>`;
-        }
-        authZone.innerHTML = `
-            ${adminButton}
-            <a href="#profile" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
-            <button class="button" style="display:inline-block; width:auto; padding:0.4rem 1rem;" onclick="initLogout()">Выйти</button>
-        `;
-    } else {
-        authZone.innerHTML = `<a href="#login" class="button" style="text-decoration: none; display: inline-block; text-align: center; line-height: 2.4; padding:0 1.5rem;">Войти</a>`;
+const router = {
+    navigate(view) {
+        window.location.hash = view;
     }
+};
+
+async function navigate(hashPath) {
+    window.location.hash = hashPath;
 }
 
-// ФУНКЦИЯ ВАЛИДАЦИИ СЛОЖНОСТИ ПАРОЛЯ
-function initPasswordStrengthListener(inputId) {
-    const input = document.getElementById(inputId);
-    const bar = document.getElementById('strength-bar');
-    const text = document.getElementById('strength-text');
+window.addEventListener('hashchange', () => {
+    const view = window.location.hash.replace('#', '') || 'home';
+    route(view);
+});
+
+// ЕДИНЫЙ РОУТЕР (СТАРАЯ СТРУКТУРА + ПОДДЕРЖКА QUERY PARAMS И НОВЫХ СТРАНИЦ)
+async function route(viewWithParams) {
+    clearInterval(carouselInterval);
+    window.onscroll = null;
     
-    if (!input || !bar || !text) return;
+    const appContainer = document.getElementById("app-content");
+    if (!appContainer) return;
 
-    input.addEventListener('input', () => {
-        const val = input.value;
-        if (!val) {
-            bar.style.width = '0%';
-            text.textContent = 'Введите пароль';
-            text.style.color = 'var(--text-muted)';
-            return;
-        }
-
-        if (val.length < 6) {
-            bar.style.width = '25%';
-            bar.style.backgroundColor = '#ef4444'; // Красный
-            text.textContent = 'Опасный (минимум 6 символов)';
-            text.style.color = '#ef4444';
-            return;
-        }
-
-        let score = 0;
-        if (/[a-z]/.test(val)) score++;
-        if (/[A-Z]/.test(val)) score++;
-        if (/[0-9]/.test(val)) score++;
-        if (/[^A-Za-z0-9]/.test(val)) score++;
-
-        if (score === 1) {
-            bar.style.width = '50%';
-            bar.style.backgroundColor = '#f97316'; // Оранжевый
-            text.textContent = 'Слабый';
-            text.style.color = '#f97316';
-        } else if (score === 2 || score === 3) {
-            bar.style.width = '75%';
-            bar.style.backgroundColor = '#eab308'; // Желтый
-            text.textContent = 'Хороший';
-            text.style.color = '#eab308';
-        } else if (score === 4) {
-            bar.style.width = '100%';
-            bar.style.backgroundColor = '#10b981'; // Зеленый
-            text.textContent = 'Отличный';
-            text.style.color = '#10b981';
-        }
-    });
-}
-
-// ЕДИНЫЙ КОРНЕВОЙ РОУТЕР ДЛЯ SPA
-async function handleRoute() {
-    if (carouselInterval) {
-        clearInterval(carouselInterval);
-        carouselInterval = null;
-    }
-
-    const hash = window.location.hash || '#home';
-    
-    // Парсинг путей и query параметров (актуально для страницы сброса пароля #reset?token=...)
-    const cleanHash = hash.split('?')[0];
-    const queryString = hash.split('?')[1] || '';
+    // Выделяем чистый путь и параметры (нужно для сброса пароля: reset?token=...)
+    const cleanView = viewWithParams.split('?')[0];
+    const queryString = viewWithParams.split('?')[1] || '';
     const urlParams = new URLSearchParams(queryString);
 
-    const appContent = document.getElementById('app-content');
-    if (!appContent) return;
+    const userStatus = await checkAuthStatus();
 
-    await updateHeader();
+    // Проверка защищенных роутов
+    const protectedViews = ['cart', 'favorites', 'admin', 'profile'];
+    if (protectedViews.includes(cleanView) && !userStatus.authenticated) {
+        return navigate('login');
+    }
+    if (cleanView === 'admin' && !userStatus.isAdmin) {
+        return navigate('home');
+    }
+    if (userStatus.authenticated && (cleanView === 'login' || cleanView === 'register')) {
+        return navigate('profile');
+    }
 
-    if (cleanHash === '#home') {
-        appContent.innerHTML = views.home('');
+    const viewParts = cleanView.split('/');
+    const viewBase = viewParts[0];
+    const dynamicId = viewParts[1];
+
+    // Отрисовка страниц
+    if (viewBase === "home" || viewBase === "") {
+        try {
+            const res = await fetch(`${API_BASE1}/items/recent`);
+            const recentItems = await res.json();
+            appContainer.innerHTML = Views.home(Views.carouselBlock(recentItems));
+            startCarouselLogic();
+        } catch(e) {
+            appContainer.innerHTML = Views.home('');
+        }
     } 
-    else if (cleanHash === '#login') {
-        appContent.innerHTML = views.login();
-        
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const msg = document.getElementById('login-message');
-
-            const result = await loginUser({ email, password });
-            if (result.success) {
-                localStorage.setItem('authToken', result.token);
-                await updateHeader();
-                window.location.hash = 'profile';
-            } else {
-                msg.textContent = result.message || "Ошибка авторизации";
-                msg.className = 'message error';
-            }
-        });
+    else if ((viewBase === "catalog" || viewBase === "catalogue") && dynamicId) {
+        const res = await fetch(`${API_BASE1}/items/${dynamicId}`);
+        if(res.ok) {
+            const item = await res.json();
+            appContainer.innerHTML = Views.itemDetail(item);
+        } else {
+            appContainer.innerHTML = "<h3>Product not found</h3>";
+        }
     } 
-    else if (cleanHash === '#register') {
-        appContent.innerHTML = views.register();
-        initPasswordStrengthListener('reg-password');
-
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const confirmPassword = document.getElementById('reg-password-confirm').value;
-            const msg = document.getElementById('register-message');
-
-            // Проверка совпадения паролей
-            if (password !== confirmPassword) {
-                msg.textContent = "Пароли не совпадают!";
-                msg.className = 'message error';
-                return;
-            }
-
-            const result = await registerUser({ name, email, password });
-            if (result.success) {
-                alert("Регистрация успешна!");
-                window.location.hash = 'login';
-            } else {
-                msg.textContent = result.message || "Ошибка регистрации";
-                msg.className = 'message error';
-            }
-        });
+    else if (viewBase === "catalog" || viewBase === "catalogue") {
+        appContainer.innerHTML = Views.catalogue();
+        cataloguePage = 0;
+        catalogueHasMore = true;
+        const grid = document.getElementById("catalogueGrid");
+        if (grid) grid.innerHTML = "";
+        await fetchCataloguePage();
+        setupInfiniteScroll();
     } 
-    else if (cleanHash === '#forgot') {
-        appContent.innerHTML = views.forgot();
+    else if (viewBase === "cart") {
+        const res = await fetch(`${API_BASE1}/cart`, { headers: getAuthHeaders() });
+        if (!res.ok) {
+            console.error("Ошибка загрузки корзины:", res.status);
+            appContainer.innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить корзину.</p>`;
+            return;
+        }
+        const items = await res.json();
+        appContainer.innerHTML = Views.cart(items);
+    } 
+    else if (viewBase === "favorites") {
+        const res = await fetch(`${API_BASE1}/favorites`, { headers: getAuthHeaders() });
+        if (!res.ok) {
+            console.error("Ошибка загрузки избранного:", res.status);
+            appContainer.innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить избранное.</p>`;
+            return;
+        }
+        const items = await res.json();
+        appContainer.innerHTML = Views.favorites(items);
+    } 
+    else if (viewBase === "admin") {
+        appContainer.innerHTML = Views.admin();
+        await loadAdminData();
+    }
+    else if (viewBase === "login") {
+        appContainer.innerHTML = Views.login();
+        initLogin();
+    }
+    else if (viewBase === "register") {
+        appContainer.innerHTML = Views.register();
+        initRegister();
+    }
+    else if (viewBase === "forgot") {
+        appContainer.innerHTML = Views.forgot();
         
         document.getElementById('forgotForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -209,15 +168,15 @@ async function handleRoute() {
                 msg.className = 'message error';
             }
         });
-    } 
-    else if (cleanHash === '#reset') {
+    }
+    else if (viewBase === "reset") {
         const token = urlParams.get('token');
         if (!token) {
-            appContent.innerHTML = `<h1>Ошибка</h1><p class="card" style="color:red; text-align:center;">Токен восстановления не найден в URL ссылке.</p>`;
+            appContainer.innerHTML = `<h1>Ошибка</h1><p class="card" style="color:red; text-align:center;">Токен восстановления не найден в URL ссылке.</p>`;
             return;
         }
 
-        appContent.innerHTML = views.reset();
+        appContainer.innerHTML = Views.reset();
         initPasswordStrengthListener('reset-password');
 
         document.getElementById('resetForm').addEventListener('submit', async (e) => {
@@ -242,25 +201,49 @@ async function handleRoute() {
             }
         });
     }
-    else if (cleanHash === '#profile') {
+    else if (viewBase === "profile") {
+        appContainer.innerHTML = Views.profile({ username: 'Загрузка...', email: '' });
         const token = localStorage.getItem('authToken');
-        if (!token) {
-            window.location.hash = 'login';
-            return;
-        }
-        const profileData = await fetchProfile(token);
-        if (profileData.success) {
-            appContent.innerHTML = views.profile(profileData.user);
+        const result = await fetchProfile(token);
+        if (result.success) {
+            appContainer.innerHTML = Views.profile(result.user);
         } else {
             localStorage.removeItem('authToken');
-            window.location.hash = 'login';
+            return navigate('login');
         }
-    } 
-    else {
-        // Заглушка для остальных разделов (каталог, корзина и др.)
-        appContent.innerHTML = `<h1>Страница</h1><p class="card">Контент в разработке...</p>`;
     }
+    else if (typeof routes !== 'undefined' && routes[viewBase]) {
+        appContainer.innerHTML = routes[viewBase]();
+    }
+
+    await updateHeader();
 }
 
-window.addEventListener('hashchange', handleRoute);
-window.addEventListener('DOMContentLoaded', handleRoute);
+// ФУНКЦИЯ ВАЛИДАЦИИ СЛОЖНОСТИ ПАРОЛЯ
+function initPasswordStrengthListener(inputId) {
+    const input = document.getElementById(inputId);
+    const bar = document.getElementById('strength-bar');
+    const text = document.getElementById('strength-text');
+    
+    if (!input || !bar || !text) return;
+
+    input.addEventListener('input', () => {
+        const val = input.value;
+        if (!val) {
+            bar.style.width = '0%';
+            text.textContent = 'Введите пароль';
+            text.style.color = 'var(--text-muted)';
+            return;
+        }
+
+        if (val.length < 6) {
+            bar.style.width = '25%';
+            bar.style.backgroundColor = '#ef4444';
+            text.textContent = 'Опасный (минимум 6 символов)';
+            text.style.color = '#ef4444';
+            return;
+        }
+
+        let score = 0;
+        if (/[a-z]/.test(val)) score++;
+        if (/[A-Z]

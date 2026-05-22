@@ -648,13 +648,27 @@ function initForgotPasswordFormLogic() {
 }
 
 function initResetPasswordFormLogic() {
-    const form = document.getElementById("resetPasswordForm");
+    const form = document.getElementById('resetPasswordForm');
     if (!form) return;
-    form.addEventListener("submit", async (e) => {
+    
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const token = document.getElementById("reset-token").value;
-        const password = document.getElementById("reset-password-field").value;
-        const msg = document.getElementById("reset-message");
+        
+        const token = document.getElementById('reset-token').value;
+        const password = document.getElementById('reset-password-field').value;
+        const passwordConfirm = document.getElementById('reset-password-confirm').value;
+        const messageDiv = document.getElementById('reset-message');
+        
+        // Валидация совпадения паролей
+        if (password !== passwordConfirm) {
+            if (messageDiv) {
+                messageDiv.textContent = "Пароли не совпадают!";
+                messageDiv.style.color = "var(--danger)";
+            } else {
+                alert("Пароли не совпадают!");
+            }
+            return;
+        }
 
         const res = await resetUserPassword(token, password);
         if (res.success) {

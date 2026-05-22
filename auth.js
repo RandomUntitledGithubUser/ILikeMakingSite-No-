@@ -1,31 +1,5 @@
-(function() {
-  let token = null;
-
-  // Вариант 1: Если токен пришел в хэше (старый формат #reset?token=XXX)
-  if (window.location.hash.includes('token=')) {
-    const hashParts = window.location.hash.split('?');
-    const cleanHash = hashParts[0]; // Получаем чистый хэш (например, #reset)
-    const params = new URLSearchParams(hashParts[1]);
-    token = params.get('token');
-    
-    if (token) {
-      localStorage.setItem('resetPasswordTokenFromUrl', token);
-      // Срочно чистим хэш, чтобы app.js не выдал пустую страницу, а штатно загрузил вьюху
-      window.location.hash = cleanHash;
-    }
-  } 
-  // Вариант 2: Если токен пришел в query-параметрах (новый формат ?token=XXX#reset)
-  else if (window.location.search.includes('token=')) {
-    const params = new URLSearchParams(window.location.search);
-    token = params.get('token');
-    if (token) {
-      localStorage.setItem('resetPasswordTokenFromUrl', token);
-    }
-  }
-})();
-
-// auth-api.js
-const API_BASE = 'https://a7d63ace255ba652-176-60-52-155.serveousercontent.com/api/auth';
+// auth.js
+const API_BASE = 'https://705b0491b8bd94bf-176-60-34-176.serveousercontent.com/api/auth';
 
 function createHeaders(token = null) {
   const headers = {
@@ -142,7 +116,6 @@ async function resetUserPassword(token, password) {
   }
 }
 
-// === АВТОМАТИЧЕСКАЯ ПОДСТАНОВКА ТОКЕНА В ФОРМУ ===
 function autoFillResetTokenField() {
   const savedToken = localStorage.getItem('resetPasswordTokenFromUrl');
   if (savedToken) {
@@ -155,14 +128,10 @@ function autoFillResetTokenField() {
   }
 }
 
-// Навешиваем слушатели событий для SPA-переключений
-window.addEventListener('DOMContentLoaded', autoFillResetTokenField);
-window.addEventListener('hashchange', autoFillResetTokenField);
+//window.addEventListener('DOMContentLoaded', autoFillResetTokenField);
+//window.addEventListener('hashchange', autoFillResetTokenField);
+//setInterval(autoFillResetTokenField, 250);
 
-// Интервал-подстраховка на случай задержек динамического рендеринга чистым JS
-setInterval(autoFillResetTokenField, 250);
-
-// Глобальный экспорт для app.js
 window.registerUser = registerUser;
 window.loginUser = loginUser;
 window.fetchProfile = fetchProfile;

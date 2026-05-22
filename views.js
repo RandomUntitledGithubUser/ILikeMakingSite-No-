@@ -191,6 +191,10 @@ views.register = () => `
             <div class="password-strength-container" style="margin-top: 8px;">
                 <div class="strength-bar-bg" style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
                     <div id="strength-bar" style="width: 0%; height: 100%; transition: all 0.3s ease; background: #64748b;"></div>
+                    <div class="form-row">
+                        <label>Подтвердите пароль</label>
+                        <input id="reg-password-confirm" type="password" required placeholder="Повторите пароль" />
+                    </div>
                 </div>
                 <small id="strength-text" style="font-size: 0.8rem; color: #64748b; display: block; margin-top: 4px;">Введите пароль (мин. 6 символов)</small>
             </div>

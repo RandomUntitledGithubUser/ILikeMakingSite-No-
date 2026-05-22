@@ -166,11 +166,6 @@ const views = {
         <button id="logoutBtn" class="button secondary" onclick="initLogout()">Выйти</button>`
 };
 
-// =========================================================================
-// ОБНОВЛЕННЫЕ И НОВЫЕ ШАБЛОНЫ UI (ДОБАВИТЬ/ОБНОВИТЬ В ОБЪЕКТЕ VIEWS В VIEWS.JS)
-// =========================================================================
-
-// 1. Измененный шаблон входа (добавлена ссылка на восстановление)
 views.login = () => `
     <h1>Войти</h1>
     <form id="loginForm" class="card">
@@ -185,7 +180,6 @@ views.login = () => `
     </form>
 `,
 
-// 2. Шаблон регистрации с визуальным контейнером сложности пароля
 views.register = () => `
     <h1>Регистрация</h1>
     <form id="registerForm" class="card">
@@ -210,7 +204,6 @@ views.register = () => `
     </form>
 `,
 
-// 3. Форма запроса токена восстановления на Email
 views.forgotPassword = () => `
     <h1>Восстановление пароля</h1>
     <form id="forgotPasswordForm" class="card">
@@ -219,20 +212,19 @@ views.forgotPassword = () => `
             <input id="forgot-email" type="email" required placeholder="example@mail.com" />
         </div>
         <div id="forgot-message" class="message"></div>
-        <button class="button" type="submit">Отправить токен сброса</button>
+        <button class="button" type="submit">Получить код сброса</button>
         <div class="form-footer" style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
             <p><a href="#login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Вернуться к авторизации</a></p>
         </div>
     </form>
-`,
+`;
 
-// 4. Форма ввода токена и нового пароля (с проверкой сложности)
 views.resetPassword = () => `
     <h1>Новый пароль</h1>
     <form id="resetPasswordForm" class="card">
         <div class="form-row">
-            <label>Токен из письма</label>
-            <input id="reset-token" type="text" required placeholder="Введите полученный токен" />
+            <label>Код из письма</label>
+            <input id="reset-token" type="text" maxlength="6" pattern="[0-9]{6}" required placeholder="6 цифр" style="text-align: center; font-size: 1.4rem; letter-spacing: 6px; font-weight: bold;" />
         </div>
         <div class="form-row">
             <label>Новый пароль</label>
@@ -250,4 +242,13 @@ views.resetPassword = () => `
             <p><a href="#login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">К авторизации</a></p>
         </div>
     </form>
-`
+`;
+
+views.notFound = () => `
+    <div class="page-content" style="text-align: center; padding: 60px 20px;">
+        <h1 style="font-size: 7rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1;">404</h1>
+        <h2 style="margin-bottom: 15px;">Страница не найдена</h2>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">Запрашиваемый вами адрес не существует или был удален.</p>
+        <a href="#home" class="btn" style="text-decoration: none; display: inline-block;">Вернуться на главную</a>
+    </div>
+`;

@@ -58,14 +58,14 @@ const views = {
         <div id="loadingIndicator" style="text-align:center; padding:20px; display:none;">Loading more items...</div>
     `,
 
-    productCard: (item) => `
+    productCard: (item, isFavorite = false) => `
         <div class="product-card" onclick="event.stopPropagation(); window.location.hash = 'catalogue/${item.id}'">
             <img src="${item.itemImageUrl || 'https://via.placeholder.com/150'}" />
             <h4>${item.itemName}</h4>
             <p>${item.itemPrice} USD</p>
             <div style="margin-top:10px; display:flex; gap:5px; justify-content:center;">
                 <button class="btn-sm" onclick="event.stopPropagation(); addToCart(${item.id})">Купить+</button>
-                <button class="favorite-btn ${isFavorite ? 'active' : ''}" onclick="toggleFavorite(event, ${item.id})">
+                <button class="favorite-btn ${isFavorite ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav(${item.id}, this)">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                 </svg>
@@ -128,7 +128,11 @@ const views = {
             ${favItems.length === 0 ? '<p>No favorites added yet.</p>' : favItems.map(fi => `
                 <div class="list-item-row" id="fav-row-${fi.id}">
                     <div class="list-item-left">
-                        <img src="${fi.item.itemImageUrl || 'https://via.placeholder.com/100'}" />
+                        <div class="favorite-page-heart">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" style="fill: var(--danger, #ef4444);">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </div>
                     </div>
                     <div class="list-item-right">
                         <div>
@@ -195,13 +199,13 @@ views.register = () => `
             <div class="password-strength-container" style="margin-top: 8px;">
                 <div class="strength-bar-bg" style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
                     <div id="strength-bar" style="width: 0%; height: 100%; transition: all 0.3s ease; background: #64748b;"></div>
-                    <div class="form-row">
-                        <label>Подтвердите пароль</label>
-                        <input id="reg-password-confirm" type="password" required placeholder="Повторите пароль" />
-                    </div>
                 </div>
                 <small id="strength-text" style="font-size: 0.8rem; color: #64748b; display: block; margin-top: 4px;">Введите пароль (мин. 6 символов)</small>
             </div>
+        </div>
+        <div class="form-row">
+            <label>Подтвердите пароль</label>
+            <input id="reg-password-confirm" type="password" required placeholder="Повторите пароль" />
         </div>
         <div id="register-message" class="message"></div>
         

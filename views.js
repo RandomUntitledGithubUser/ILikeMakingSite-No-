@@ -223,8 +223,8 @@ views.resetPassword = () => `
     <h1>Новый пароль</h1>
     <form id="resetPasswordForm" class="card">
         <div class="form-row">
-            <label>Код из письма</label>
-            <input id="reset-token" type="text" maxlength="6" pattern="[0-9]{6}" required placeholder="6 цифр" style="text-align: center; font-size: 1.4rem; letter-spacing: 6px; font-weight: bold;" />
+            <label>Токен из письма</label>
+            <input id="reset-token" type="text" required placeholder="Введите полученный токен" />
         </div>
         <div class="form-row">
             <label>Новый пароль</label>
@@ -236,6 +236,12 @@ views.resetPassword = () => `
                 <small id="reset-strength-text" style="font-size: 0.8rem; color: #64748b; display: block; margin-top: 4px;">Введите пароль (мин. 6 символов)</small>
             </div>
         </div>
+        
+        <div class="form-row">
+            <label>Подтвердите новый пароль</label>
+            <input id="reset-password-confirm" type="password" required placeholder="Повторите новый пароль" />
+        </div>
+        
         <div id="reset-message" class="message"></div>
         <button class="button" type="submit">Сохранить новый пароль</button>
         <div class="form-footer" style="margin-top: 20px; text-align: center; font-size: 0.9rem;">

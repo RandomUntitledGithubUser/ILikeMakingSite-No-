@@ -321,3 +321,120 @@ input:focus {
 .form-group input, .form-group textarea, .form-group select {
   width: 100%; padding: 8px; box-sizing: border-box;
 }
+.favorite-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.15);
+    background: transparent;
+}
+
+.favorite-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: none; 
+    stroke: var(--text-muted, #64748b);
+    stroke-width: 2;
+    transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.favorite-btn.active svg {
+    fill: var(--danger, #ef4444); 
+    stroke: var(--danger, #ef4444); 
+}
+
+button, .button, .btn, .tab-btn {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.65rem 1.4rem;
+    border-radius: var(--radius, 12px);
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    outline: none;
+}
+
+/* Основные кнопки действий (Формы, подтверждения, отправка данных) */
+button[type="submit"], .button, .btn {
+    background-color: var(--primary-color, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.12);
+}
+
+button[type="submit"]:hover, .button:hover, .btn:hover {
+    background-color: var(--primary-hover, #1d4ed8);
+    box-shadow: 0 6px 12px -1px rgba(37, 99, 235, 0.24);
+}
+
+/* Эффект нажатия для всех кнопок */
+button:active, .button:active, .btn:active, .tab-btn:active {
+    transform: scale(0.97);
+}
+
+/* Переключатели вкладок в Админ-панели (.tab-btn) */
+.admin-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    background-color: transparent;
+    color: var(--text-muted, #64748b);
+    border: 1px solid var(--border-color, #e2e8f0);
+    padding: 0.5rem 1.2rem;
+}
+
+.tab-btn:hover:not(.active) {
+    background-color: var(--secondary-bg, #f8fafc);
+    color: var(--text-main, #1e293b);
+    border-color: var(--text-muted, #64748b);
+}
+
+.tab-btn.active {
+    background-color: var(--primary-color, #2563eb);
+    color: #ffffff;
+    border-color: var(--primary-color, #2563eb);
+}
+
+/* Второстепенные кнопки (например, кнопка сброса или закрытия в модальном окне) */
+.modal-content button[type="button"], .filters-sidebar button {
+    background-color: var(--secondary-bg, #f8fafc);
+    color: var(--text-main, #1e293b);
+    border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.modal-content button[type="button"]:hover, .filters-sidebar button:hover {
+    background-color: var(--border-color, #e2e8f0);
+}
+
+/* Стилизация крестика закрытия модального окна */
+.close-modal {
+    background: transparent;
+    border: none;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--text-muted, #64748b);
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.close-modal:hover {
+    color: var(--danger, #ef4444);
+    background-color: rgba(239, 68, 68, 0.08);
+}

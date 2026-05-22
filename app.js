@@ -1,4 +1,4 @@
-const API_BASE1 = 'https://d991496381dd27aa-176-60-34-176.serveousercontent.com/api';
+const API_BASE1 = ' https://04998a87c640c82b-176-60-34-176.serveousercontent.com/api';
 
 let currentAdminTab = 'items';
 let cataloguePage = 0;
@@ -215,6 +215,19 @@ async function fetchCataloguePage() {
 
     try {
         const token = localStorage.getItem('authToken');
+        
+        let favIds = [];
+        if (token) {
+            try {
+                const favRes = await fetch(`${API_BASE1}/favorites`, { headers: getAuthHeaders() });
+                if (favRes.ok) {
+                    const favData = await favRes.json();
+                    favIds = favData.map(f => f.item.id);
+                }
+            } catch (e) {
+                console.error("Ошибка предзагрузки избранного:", e);
+            }
+        }
 
         const res = await fetch(url, {
             method: 'GET',
@@ -236,7 +249,8 @@ async function fetchCataloguePage() {
             catalogueHasMore = false;
         } else {
             data.content.forEach(item => {
-                if (grid) grid.insertAdjacentHTML('beforeend', Views.productCard(item));
+                const isFav = favIds.includes(item.id);
+                if (grid) grid.insertAdjacentHTML('beforeend', Views.productCard(item, isFav));
             });
             cataloguePage++;
             catalogueHasMore = !data.last;
@@ -292,10 +306,13 @@ async function addToCart(itemId) {
     else alert("Please login first.");
 }
 
-async function toggleFav(itemId) {
+async function toggleFav(itemId, btnElement = null) {
     const res = await fetch(`${API_BASE1}/favorites/toggle/${itemId}`, { method: 'POST', headers: getAuthHeaders() });
     if(res.ok) {
         const data = await res.json();
+        if (btnElement) {
+            btnElement.classList.toggle('active', data.added);
+        }
         alert(data.added ? "Added to favorites!" : "Removed from favorites!");
     } else {
         alert("Please login first.");
@@ -484,12 +501,6 @@ function initLogin() {
         const emailOrUsername = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
         const msg = document.getElementById('login-message');
-        
-        /*if (!emailOrUsername || !password) {
-            msg.textContent = "Заполните все поля!";
-            msg.className = 'message error';
-            return;
-        }*/
 
         const result = await loginUser({ email: emailOrUsername, password });
         if (result.success) {
@@ -513,6 +524,7 @@ function initRegister() {
         const name = document.getElementById('reg-name').value.trim();
         const email = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value;
+        const passwordConfirm = document.getElementById('reg-password-confirm').value;
         const msg = document.getElementById('register-message');
 
         if (name.length < 3) {
@@ -527,6 +539,11 @@ function initRegister() {
         }
         if (password.length < 6) {
             msg.textContent = "Пароль должен быть не менее 6 символов!";
+            msg.className = 'message error';
+            return;
+        }
+        if (password !== passwordConfirm) {
+            msg.textContent = "Пароли не совпадают!";
             msg.className = 'message error';
             return;
         }
@@ -586,40 +603,38 @@ function attachPasswordStrengthChecker(inputId, barId, textId) {
     passwordInput.addEventListener('input', (e) => {
         const password = e.target.value;
         
-        // Старое требование: минимальная длина 6 символов
         if (!password || password.length < 6) {
             bar.style.width = '10%';
-            bar.style.backgroundColor = '#ef4444'; // Опасный/короткий
+            bar.style.backgroundColor = '#ef4444'; 
             textElement.textContent = 'Слишком короткий (мин. 6 символов)';
             textElement.style.color = '#ef4444';
             return;
         }
 
         let score = 0;
-        if (/[a-z]/.test(password)) score++;      // Наличие строчных
-        if (/[A-Z]/.test(password)) score++;      // Наличие прописных
-        if (/[0-9]/.test(password)) score++;      // Наличие цифр
-        if (/[^A-Za-z0-9]/.test(password)) score++; // Специальные символы
+        if (/[a-z]/.test(password)) score++;      
+        if (/[A-Z]/.test(password)) score++;      
+        if (/[0-9]/.test(password)) score++;      
+        if (/[^A-Za-z0-9]/.test(password)) score++; 
 
-        // Динамическое изменение уровня сложности
         if (score === 1) {
             bar.style.width = '30%';
-            bar.style.backgroundColor = '#ef4444'; // Красный (Опасный)
+            bar.style.backgroundColor = '#ef4444'; 
             textElement.textContent = 'Слабый пароль (опасный)';
             textElement.style.color = '#ef4444';
         } else if (score === 2) {
             bar.style.width = '50%';
-            bar.style.backgroundColor = '#f59e0b'; // Оранжевый
+            bar.style.backgroundColor = '#f59e0b'; 
             textElement.textContent = 'Средний уровень сложности';
             textElement.style.color = '#f59e0b';
         } else if (score === 3) {
             bar.style.width = '75%';
-            bar.style.backgroundColor = '#3b82f6'; // Синий
+            bar.style.backgroundColor = '#3b82f6'; 
             textElement.textContent = 'Хороший пароль';
             textElement.style.color = '#3b82f6';
         } else if (score === 4) {
             bar.style.width = '100%';
-            bar.style.backgroundColor = '#10b981'; // Зеленый (Отличный)
+            bar.style.backgroundColor = '#10b981'; 
             textElement.textContent = 'Отличный, безопасный пароль!';
             textElement.style.color = '#10b981';
         }
@@ -639,7 +654,7 @@ function initForgotPasswordFormLogic() {
         const res = await forgotUserPassword(email);
         if (res.success) {
             alert("Код успешно отправлен! Введите его на следующей странице.");
-            navigate("reset-password"); // Перенаправляем на ввод кода вручную
+            navigate("reset-password"); 
         } else {
             msg.textContent = res.message;
             msg.style.color = "var(--danger)";
@@ -659,7 +674,6 @@ function initResetPasswordFormLogic() {
         const passwordConfirm = document.getElementById('reset-password-confirm').value;
         const messageDiv = document.getElementById('reset-message');
         
-        // Валидация совпадения паролей
         if (password !== passwordConfirm) {
             if (messageDiv) {
                 messageDiv.textContent = "Пароли не совпадают!";
@@ -675,15 +689,14 @@ function initResetPasswordFormLogic() {
             alert("Пароль успешно изменен! Используйте его для входа.");
             navigate("login");
         } else {
-            msg.textContent = res.message;
-            msg.style.color = "var(--danger)";
+            if (messageDiv) {
+                messageDiv.textContent = res.message;
+                messageDiv.style.color = "var(--danger)";
+            }
         }
     });
 }
 
-/**
- * Дополнительный перехватчик хешей для кастомных страниц восстановления пароля
- */
 function handleRecoveryPagesRouting() {
     const hash = window.location.hash || '#home';
     const appContent = document.getElementById('app-content');
@@ -695,7 +708,6 @@ function handleRecoveryPagesRouting() {
     } else if (hash.startsWith('#reset-password')) {
         appContent.innerHTML = views.resetPassword();
         
-        // Если токен передан в url как параметр (?token=XYZ) - парсим его в инпут автоматически
         if (hash.includes('?')) {
             const queryParams = new URLSearchParams(hash.split('?')[1]);
             const tokenFromUrl = queryParams.get('token');
@@ -705,21 +717,16 @@ function handleRecoveryPagesRouting() {
             }
         }
         
-        // Привязываем проверку сложности к форме сброса пароля
         attachPasswordStrengthChecker('reset-password-field', 'reset-strength-bar', 'reset-strength-text');
         initResetPasswordFormLogic();
     }
 }
 
-// Слушатели для интеграции в SPA-структуру
 window.addEventListener('hashchange', handleRecoveryPagesRouting);
 
 window.addEventListener('DOMContentLoaded', () => {
-    // Вызов при первичной загрузке страницы
     handleRecoveryPagesRouting();
 
-    // Отслеживаем динамический рендеринг стандартного шаблона #register через MutationObserver
-    // Это гарантирует работу индикатора сложности при любом способе переключения страниц
     const appContent = document.getElementById('app-content');
     if (appContent) {
         const observer = new MutationObserver(() => {

@@ -1,4 +1,4 @@
-const API_BASE1 = 'https://a7d63ace255ba652-176-60-52-155.serveousercontent.com/api';
+const API_BASE1 = 'https://705b0491b8bd94bf-176-60-34-176.serveousercontent.com/api';
 
 let currentAdminTab = 'items';
 let cataloguePage = 0;
@@ -12,6 +12,22 @@ if (typeof views !== 'undefined') {
     if (!views.catalogue && views.catalog) {
         views.catalogue = views.catalog;
     }
+}
+
+window.alert = function(message) {
+    const modal = document.getElementById("customAlertModal");
+    const msgElem = document.getElementById("customAlertMessage");
+    if (modal && msgElem) {
+        msgElem.textContent = message;
+        modal.style.display = "flex";
+    } else {
+        console.warn("Предупреждение:", message);
+    }
+};
+
+function closeCustomAlert() {
+    const modal = document.getElementById("customAlertModal");
+    if (modal) modal.style.display = "none";
 }
 
 function getAuthHeaders() {
@@ -99,7 +115,7 @@ async function route(view) {
             const item = await res.json();
             appContainer.innerHTML = Views.itemDetail(item);
         } else {
-            appContainer.innerHTML = "<h3>Product not found</h3>";
+            appContainer.innerHTML = Views.notFound(); // Оформляем как 404 если товар не найден
         }
     } 
     else if (viewBase === "catalog" || viewBase === "catalogue") {
@@ -114,8 +130,7 @@ async function route(view) {
     else if (viewBase === "cart") {
         const res = await fetch(`${API_BASE1}/cart`, { headers: getAuthHeaders() });
         if (!res.ok) {
-            console.error("Ошибка загрузки корзины:", res.status);
-            document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить корзину.</p>`;
+            appContainer.innerHTML = Views.notFound();
             return;
         }
         const items = await res.json();
@@ -124,8 +139,7 @@ async function route(view) {
     else if (viewBase === "favorites") {
         const res = await fetch(`${API_BASE1}/favorites`, { headers: getAuthHeaders() });
         if (!res.ok) {
-            console.error("Ошибка загрузки избранного:", res.status);
-            document.getElementById('app-content').innerHTML = `<h1>Ошибка ${res.status}</h1><p>Не удалось загрузить избранное.</p>`;
+            appContainer.innerHTML = Views.notFound();
             return;
         }
         const items = await res.json();
@@ -154,8 +168,20 @@ async function route(view) {
             return navigate('login');
         }
     }
+    else if (viewBase === "forgot-password") {
+        appContainer.innerHTML = Views.forgotPassword();
+        initForgotPasswordFormLogic();
+    }
+    else if (viewBase === "reset-password") {
+        appContainer.innerHTML = Views.resetPassword();
+        attachPasswordStrengthChecker('reset-password-field', 'reset-strength-bar', 'reset-strength-text');
+        initResetPasswordFormLogic();
+    }
     else if (typeof routes !== 'undefined' && routes[viewBase]) {
         appContainer.innerHTML = routes[viewBase]();
+    }
+    else {
+        appContainer.innerHTML = Views.notFound();
     }
 
     updateHeader();
@@ -600,64 +626,43 @@ function attachPasswordStrengthChecker(inputId, barId, textId) {
     });
 }
 
-/**
- * Инициализация логики отправки формы forgotPassword
- */
 function initForgotPasswordFormLogic() {
-    const form = document.getElementById('forgotPasswordForm');
+    const form = document.getElementById("forgotPasswordForm");
     if (!form) return;
-
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const email = document.getElementById('forgot-email').value;
-        const msg = document.getElementById('forgot-message');
-        
-        msg.textContent = "Отправка запроса...";
-        msg.className = "message";
+        const email = document.getElementById("forgot-email").value;
+        const msg = document.getElementById("forgot-message");
+        msg.textContent = "Отправка кода...";
+        msg.style.color = "var(--text-main)";
 
-        const result = await forgotUserPassword(email);
-        if (result.success) {
-            msg.textContent = result.message || "Инструкция и токен успешно отправлены на вашу почту!";
-            msg.className = "message success";
-            // Автоматический переход на форму ввода токена через 3 секунды
-            setTimeout(() => { window.location.hash = '#reset-password'; }, 3000);
+        const res = await forgotUserPassword(email);
+        if (res.success) {
+            alert("Код успешно отправлен! Введите его на следующей странице.");
+            navigate("reset-password"); // Перенаправляем на ввод кода вручную
         } else {
-            msg.textContent = result.message || "Ошибка отправки. Проверьте правильность Email.";
-            msg.className = "message error";
+            msg.textContent = res.message;
+            msg.style.color = "var(--danger)";
         }
     });
 }
 
-/**
- * Инициализация логики отправки формы resetPassword
- */
 function initResetPasswordFormLogic() {
-    const form = document.getElementById('resetPasswordForm');
+    const form = document.getElementById("resetPasswordForm");
     if (!form) return;
-
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const token = document.getElementById('reset-token').value;
-        const password = document.getElementById('reset-password-field').value;
-        const msg = document.getElementById('reset-message');
+        const token = document.getElementById("reset-token").value;
+        const password = document.getElementById("reset-password-field").value;
+        const msg = document.getElementById("reset-message");
 
-        if (password.length < 6) {
-            msg.textContent = "Ошибка: Пароль должен содержать от 6 символов.";
-            msg.className = "message error";
-            return;
-        }
-
-        msg.textContent = "Обновление пароля...";
-        msg.className = "message";
-
-        const result = await resetUserPassword(token, password);
-        if (result.success) {
-            msg.textContent = result.message || "Пароль успешно изменен! Сейчас вы будете перенаправлены.";
-            msg.className = "message success";
-            setTimeout(() => { window.location.hash = '#login'; }, 2500);
+        const res = await resetUserPassword(token, password);
+        if (res.success) {
+            alert("Пароль успешно изменен! Используйте его для входа.");
+            navigate("login");
         } else {
-            msg.textContent = result.message || "Не удалось сбросить пароль. Неверный или истекший токен.";
-            msg.className = "message error";
+            msg.textContent = res.message;
+            msg.style.color = "var(--danger)";
         }
     });
 }

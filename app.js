@@ -98,16 +98,16 @@ async function route(view) {
 
     const protectedViews = ['cart', 'favorites', 'admin', 'profile'];
     if (protectedViews.includes(view) && !userStatus.authenticated) {
-        window.location.hash = '/#/login';
+        window.location.hash = '#/login';
         return;
     }
     if (view === 'admin' && !userStatus.isAdmin) {
-        window.location.hash = '/#/home';
+        window.location.hash = '#/home';
         return;
     }
 
     if (userStatus.authenticated && (view === 'login' || view === 'register')) {
-        window.location.hash = '/#/profile';
+        window.location.hash = '#/profile';
         return;
     }
 

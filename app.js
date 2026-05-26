@@ -600,7 +600,7 @@ async function updateHeader() {
             <button class="button" onclick="initLogout()">Выйти</button>
         `;
     } else {
-        authZone.innerHTML = `<button class="button" onclick="router.navigate('login')">Войти</button>`;
+        authZone.innerHTML = `<a href="#/login" class="button" style="text-decoration: none; display: inline-block; text-align: center; line-height: 2.4;">Войти</a>`;
     }
 }
 

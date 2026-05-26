@@ -61,16 +61,17 @@ async function checkAuthStatus() {
 
 const router = {
     navigate(view) {
-        window.location.hash = view;
+        window.location.hash = '/#/' + view;
     }
 };
 
 async function navigate(hashPath) {
-    window.location.hash = hashPath;
+    window.location.hash = '/#/' + hashPath;
 }
 
 window.addEventListener('hashchange', () => {
-    const view = window.location.hash.replace('#', '') || 'home';
+    const hash = window.location.hash;
+    const view = hash.replace('/#/', '').replace('#', '') || 'home';
     route(view);
 });
 
@@ -85,14 +86,17 @@ async function route(view) {
 
     const protectedViews = ['cart', 'favorites', 'admin', 'profile'];
     if (protectedViews.includes(view) && !userStatus.authenticated) {
-        return navigate('login');
+        window.location.hash = '/#/login';
+        return;
     }
     if (view === 'admin' && !userStatus.isAdmin) {
-        return navigate('home');
+        window.location.hash = '/#/home';
+        return;
     }
 
     if (userStatus.authenticated && (view === 'login' || view === 'register')) {
-        return navigate('profile');
+        window.location.hash = '/#/profile';
+        return;
     }
 
     const viewParts = view.split('/');
@@ -697,36 +701,7 @@ function initResetPasswordFormLogic() {
     });
 }
 
-function handleRecoveryPagesRouting() {
-    const hash = window.location.hash || '#home';
-    const appContent = document.getElementById('app-content');
-    if (!appContent) return;
-
-    if (hash === '#forgot-password') {
-        appContent.innerHTML = views.forgotPassword();
-        initForgotPasswordFormLogic();
-    } else if (hash.startsWith('#reset-password')) {
-        appContent.innerHTML = views.resetPassword();
-        
-        if (hash.includes('?')) {
-            const queryParams = new URLSearchParams(hash.split('?')[1]);
-            const tokenFromUrl = queryParams.get('token');
-            if (tokenFromUrl) {
-                const tokenInput = document.getElementById('reset-token');
-                if (tokenInput) tokenInput.value = tokenFromUrl;
-            }
-        }
-        
-        attachPasswordStrengthChecker('reset-password-field', 'reset-strength-bar', 'reset-strength-text');
-        initResetPasswordFormLogic();
-    }
-}
-
-window.addEventListener('hashchange', handleRecoveryPagesRouting);
-
 window.addEventListener('DOMContentLoaded', () => {
-    handleRecoveryPagesRouting();
-
     const appContent = document.getElementById('app-content');
     if (appContent) {
         const observer = new MutationObserver(() => {
@@ -741,6 +716,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    const startView = window.location.hash.replace('#', '') || 'home';
+    const hash = window.location.hash;
+    const startView = hash.replace('/#/', '').replace('#', '') || 'home';
     route(startView);
 });

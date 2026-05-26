@@ -58,22 +58,34 @@ async function checkAuthStatus() {
     return { authenticated: false, isAdmin: false };
 }
 
-
 const router = {
     navigate(view) {
-        window.location.hash = '/#/' + view;
+        window.location.hash = '/#' + (view.startsWith('/') ? view : '/' + view);
     }
 };
 
 async function navigate(hashPath) {
-    window.location.hash = '/#/' + hashPath;
+    window.location.hash = '/#' + (hashPath.startsWith('/') ? hashPath : '/' + hashPath);
 }
 
-window.addEventListener('hashchange', () => {
-    const hash = window.location.hash;
-    const view = hash.replace('/#/', '').replace('#', '') || 'home';
+function handleHashChange() {
+    let hash = window.location.hash;
+    
+    // Корректно очищаем хэш от префиксов "#/", "/#/", "#"
+    if (hash.startsWith('#/')) {
+        hash = hash.substring(2);
+    } else if (hash.startsWith('/#/')) {
+        hash = hash.substring(3);
+    } else if (hash.startsWith('#')) {
+        hash = hash.substring(1);
+    }
+    
+    // Если хэш пустой или равен "/", то это главная страница
+    const view = hash === '' || hash === '/' ? 'home' : hash;
     route(view);
-});
+}
+
+window.addEventListener('hashchange', handleHashChange);
 
 async function route(view) {
     clearInterval(carouselInterval);
@@ -119,7 +131,7 @@ async function route(view) {
             const item = await res.json();
             appContainer.innerHTML = Views.itemDetail(item);
         } else {
-            appContainer.innerHTML = Views.notFound(); // Оформляем как 404 если товар не найден
+            appContainer.innerHTML = Views.notFound();
         }
     } 
     else if (viewBase === "catalog" || viewBase === "catalogue") {
@@ -204,7 +216,6 @@ function startCarouselLogic() {
         slides[currentSlide].classList.add("active");
     }, 5000);
 }
-
 
 async function fetchCataloguePage() {
     if (catalogueLoading || !catalogueHasMore) return;
@@ -381,7 +392,7 @@ async function loadAdminData() {
         th.innerHTML = "<th>ID</th><th>Username</th><th>Email</th><th>Is Admin</th><th>Actions</th>";
         const res = await fetch(`${API_BASE1}/admin/users`, { headers: getAuthHeaders() });
         if (!res.ok) {
-                tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки товаров: ${res.status} (Доступ запрещен)</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Ошибка загрузки пользователей: ${res.status} (Доступ запрещен)</td></tr>`;
                 return;
         }
         const users = await res.json();
@@ -580,12 +591,12 @@ async function updateHeader() {
         
         let adminButton = '';
         if (auth.isAdmin) {
-            adminButton = `<a href="#admin" style="margin-right: 15px; color: #e74c3c; text-decoration: none; font-weight: 600;">Админка</a>`;
+            adminButton = `<a href="#/admin" style="margin-right: 15px; color: #e74c3c; text-decoration: none; font-weight: 600;">Админка</a>`;
         }
 
         authZone.innerHTML = `
             ${adminButton}
-            <a href="#profile" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
+            <a href="#/profile" style="margin-right: 15px; color: var(--primary-color); text-decoration: none; font-weight: 600;">Профиль</a>
             <button class="button" onclick="initLogout()">Выйти</button>
         `;
     } else {
@@ -593,10 +604,6 @@ async function updateHeader() {
     }
 }
 
-
-/**
- * Валидация состава пароля по регулярным выражениям и обновление индикатора
- */
 function attachPasswordStrengthChecker(inputId, barId, textId) {
     const passwordInput = document.getElementById(inputId);
     const bar = document.getElementById(barId);
@@ -715,8 +722,4 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-    const hash = window.location.hash;
-    const startView = hash.replace('/#/', '').replace('#', '') || 'home';
-    route(startView);
-});
+document.addEventListener("DOMContentLoaded", handleHashChange);

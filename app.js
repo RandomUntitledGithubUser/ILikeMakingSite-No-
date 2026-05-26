@@ -60,12 +60,12 @@ async function checkAuthStatus() {
 
 const router = {
     navigate(view) {
-        window.location.hash = '/#' + (view.startsWith('/') ? view : '/' + view);
+        window.location.hash = '#' + (view.startsWith('/') ? view : '/' + view);
     }
 };
 
 async function navigate(hashPath) {
-    window.location.hash = '/#' + (hashPath.startsWith('/') ? hashPath : '/' + hashPath);
+    window.location.hash = '#' + (hashPath.startsWith('/') ? hashPath : '/' + hashPath);
 }
 
 function handleHashChange() {

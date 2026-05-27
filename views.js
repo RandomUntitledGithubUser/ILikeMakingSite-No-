@@ -64,9 +64,9 @@ const views = {
             <h4>${item.itemName}</h4>
             <p>${item.itemPrice} USD</p>
             <div style="margin-top:10px; display:flex; gap:5px; justify-content:center;">
-                <button class="btn-sm" onclick="event.stopPropagation(); addToCart(${item.id})">Купить+</button>
+                <button class="btn-sm" onclick="event.stopPropagation(); addToCart(${item.id})">Купить</button>
                 <button class="favorite-btn ${isFavorite ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav(${item.id}, this)">
-                    ♡ Избранное
+                    Favorites
                 </button>
             </div>
         </div>
@@ -81,7 +81,7 @@ const views = {
                 <p style="font-size:20px; color:#28a745;"><strong>Price:</strong> ${item.itemPrice} USD</p>
                 <p>${item.itemDesc || 'No description available.'}</p>
                 <button class="btn" onclick="addToCart(${item.id})">Add to Cart</button>
-                <button class="btn" onclick="toggleFav(${item.id})" style="background:#dc3545;">Add to Favorites</button>
+                <button class="btn" onclick="toggleFav(${item.id})" style="background:#dc3545;">Favorites</button>
                 <br/><br/>
                 <a href="#/catalogue" class="btn-link" style="text-decoration: none; display: inline-block;">← Back to Catalogue</a>
             </div>
@@ -159,98 +159,97 @@ const views = {
     `,
 
     profile: (user) => `
-        <h1>Профиль</h1>
+        <h1>Profile</h1>
         <div class="card">
             <p><strong>Имя:</strong> ${user.name}</p>
             <p><strong>Email:</strong> ${user.email}</p>
-        </div>
-        <button id="logoutBtn" class="button secondary" onclick="initLogout()">Выйти</button>`
+        </div>`
 };
 
 views.login = () => `
-    <h1>Войти</h1>
+    <h1>Login</h1>
     <form id="loginForm" class="card">
         <div class="form-row"><label>Email или Имя</label><input id="login-email" type="text" required /></div>
         <div class="form-row"><label>Пароль</label><input id="login-password" type="password" required /></div>
         <div id="login-message" class="message"></div>
         <button class="button" type="submit">Войти</button>
         <div class="form-footer" style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
-            <p style="margin-bottom: 10px;"><a href="#/forgot-password" style="color: var(--text-muted); text-decoration: none;">Забыли пароль?</a></p>
-            <p>Ещё нет аккаунта? <a href="#/register" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Зарегистрироваться</a></p>
+            <p style="margin-bottom: 10px;"><a href="#/forgot-password" style="color: var(--text-muted); text-decoration: none;">Forgot password?</a></p>
+            <p>No account? <a href="#/register" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Register</a></p>
         </div>
     </form>
 `;
 
 views.register = () => `
-    <h1>Регистрация</h1>
+    <h1>Registration</h1>
     <form id="registerForm" class="card">
         <div class="form-row"><label>Имя</label><input id="reg-name" type="text" minlength="3" maxlength="20" required /></div>
         <div class="form-row"><label>Email</label><input id="reg-email" type="email" required /></div>
         <div class="form-row">
-            <label>Пароль</label>
+            <label>Password</label>
             <input id="reg-password" type="password" minlength="6" required />
             <div class="password-strength-container" style="margin-top: 8px;">
                 <div class="strength-bar-bg" style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
                     <div id="strength-bar" style="width: 0%; height: 100%; transition: all 0.3s ease; background: #64748b;"></div>
                 </div>
-                <small id="strength-text" style="font-size: 0.8rem; color: #64748b; display: block; margin-top: 4px;">Введите пароль (мин. 6 символов)</small>
+                <small id="strength-text" style="font-size: 0.8rem; color: #64748b; display: block; margin-top: 4px;">Enter password</small>
             </div>
         </div>
         <div class="form-row">
-            <label>Подтвердите пароль</label>
-            <input id="reg-password-confirm" type="password" required placeholder="Повторите пароль" />
+            <label>Repeat password</label>
+            <input id="reg-password-confirm" type="password" required placeholder="Repeat password" />
         </div>
         <div id="register-message" class="message"></div>
         
-        <button class="button" type="submit">Создать аккаунт</button>
+        <button class="button" type="submit">Create account</button>
         <div class="form-footer" style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
-            <p>Уже есть профиль? <a href="#/login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Войти</a></p>
+            <p>Already have account? <a href="#/login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Login</a></p>
         </div>
     </form>
 `;
 
 views.forgotPassword = () => `
-    <h1>Восстановление пароля</h1>
+    <h1>Password restoration</h1>
     <form id="forgotPasswordForm" class="card">
         <div class="form-row">
-            <label>Email аккаунта</label>
+            <label>Email</label>
             <input id="forgot-email" type="email" required placeholder="example@mail.com" />
         </div>
         <div id="forgot-message" class="message"></div>
-        <button class="button" type="submit">Получить код сброса</button>
+        <button class="button" type="submit">receive code</button>
         <div class="form-footer" style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
-            <p><a href="#/login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Вернуться к авторизации</a></p>
+            <p><a href="#/login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Back to login</a></p>
         </div>
     </form>
 `;
 
 views.resetPassword = () => `
-    <h1>Новый пароль</h1>
+    <h1>New password</h1>
     <form id="resetPasswordForm" class="card">
         <div class="form-row">
-            <label>Токен из письма</label>
-            <input id="reset-token" type="text" required placeholder="Введите полученный токен" />
+            <label>Code</label>
+            <input id="reset-token" type="text" required placeholder="Enter code" />
         </div>
         <div class="form-row">
-            <label>Новый пароль</label>
-            <input id="reset-password-field" type="password" minlength="6" required placeholder="Минимум 6 символов" />
+            <label>New password</label>
+            <input id="reset-password-field" type="password" minlength="6" required placeholder="Minimum 6 symbols" />
             <div class="password-strength-container" style="margin-top: 8px;">
                 <div class="strength-bar-bg" style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
                     <div id="reset-strength-bar" style="width: 0%; height: 100%; transition: all 0.3s ease; background: #64748b;"></div>
                 </div>
-                <small id="reset-strength-text" style="font-size: 0.8rem; color: #64748b; display: block; margin-top: 4px;">Введите пароль (мин. 6 символов)</small>
+                <small id="reset-strength-text" style="font-size: 0.8rem; color: #64748b; display: block; margin-top: 4px;">Enter new password</small>
             </div>
         </div>
         
         <div class="form-row">
-            <label>Подтвердите новый пароль</label>
-            <input id="reset-password-confirm" type="password" required placeholder="Повторите новый пароль" />
+            <label>Repeat new password</label>
+            <input id="reset-password-confirm" type="password" required placeholder="Repeat new password" />
         </div>
         
         <div id="reset-message" class="message"></div>
-        <button class="button" type="submit">Сохранить новый пароль</button>
+        <button class="button" type="submit">Save new password</button>
         <div class="form-footer" style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
-            <p><a href="#/login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">К авторизации</a></p>
+            <p><a href="#/login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">To authorisation</a></p>
         </div>
     </form>
 `;
@@ -258,8 +257,8 @@ views.resetPassword = () => `
 views.notFound = () => `
     <div class="page-content" style="text-align: center; padding: 60px 20px;">
         <h1 style="font-size: 7rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1;">404</h1>
-        <h2 style="margin-bottom: 15px;">Страница не найдена</h2>
-        <p style="color: var(--text-muted); margin-bottom: 30px;">Запрашиваемый вами адрес не существует или был удален.</p>
-        <a href="#/home" class="btn" style="text-decoration: none; display: inline-block;">Вернуться на главную</a>
+        <h2 style="margin-bottom: 15px;">Page not found!</h2>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">It seems you've cast wrong page spell fellow wizrard!.</p>
+        <a href="#/home" class="btn" style="text-decoration: none; display: inline-block;">Back to home</a>
     </div>
 `;

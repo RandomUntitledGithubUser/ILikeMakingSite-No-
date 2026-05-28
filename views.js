@@ -163,6 +163,7 @@ const views = {
         <div class="card">
             <p><strong>Имя:</strong> ${user.name}</p>
             <p><strong>Email:</strong> ${user.email}</p>
+            <p style="margin-bottom: 10px;"><a href="#/forgot-password" style="color: var(--text-muted); text-decoration: none;">Change password</a></p>
         </div>`
 };
 

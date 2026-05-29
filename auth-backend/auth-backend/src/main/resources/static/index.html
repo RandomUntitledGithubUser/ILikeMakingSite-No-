@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="data:,">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>My Store</title>
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <header id="main-header">
+    <nav class="container nav-bar">
+        <div class="logo" onclick="window.location.hash = '#/home'">CardSlinger</div>
+        <div class="nav-links">
+            <a href="#/catalogue">Каталог</a>
+            <a href="#/cart">Корзина</a>
+            <a href="#/favorites">Избранное</a>
+        </div>
+        <div id="auth-zone">
+           <a href="#/login" class="button" style="text-decoration: none; display: inline-block; text-align: center; line-height: 2.4;">Войти</a>
+        </div>
+    </nav>
+</header>
+
+    <main id="app-content" class="container">
+        
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>Контакты: +375 (33) 911-92-97 | email: besthelpintcg@gmail.com</p>
+        </div>
+    </footer>
+
+    <script src="./auth.js"></script> 
+    <script src="./views.js"></script>
+    <script src="./app.js"></script>
+
+
+    <div id="adminModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeAdminModal()">&times;</span>
+    <h3 id="modalTitle">Edit</h3>
+    <form id="modalForm" onsubmit="saveAdminForm(event)">
+      <div id="modalFields"></div>
+      <button type="submit" class="btn">Save</button>
+    </form>
+  </div>
+</div>
+    <div id="customAlertModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div class="modal-content" style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; text-align:center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border:none;">
+            <h3 style="margin-bottom: 12px; color: var(--text-main);">Уведомление</h3>
+            <p id="customAlertMessage" style="font-size:1rem; margin-bottom:20px; color:var(--text-muted); line-height:1.5;"></p>
+            <button class="btn" onclick="closeCustomAlert()" style="padding:10px 30px; width:100%; border-radius:8px;">OK</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-const API_BASE1 = 'https://e20c346355f2e845-46-216-166-36.serveousercontent.com/api';
+const API_BASE1 = ' https://38c13593aff751bd-46-216-166-38.serveousercontent.com/api';
 
 let currentAdminTab = 'items';
 let cataloguePage = 0;
